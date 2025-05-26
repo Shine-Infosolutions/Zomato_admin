@@ -111,9 +111,9 @@ const Variation = () => {
         {variations.map((variation) => (
           <div
             key={variation.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
           >
-            <div className="flex items-center p-4 border-b border-gray-100">
+            <div className="flex items-center p-4 border-b border-gray-200">
               <div className="p-3 rounded-full bg-gray-100 mr-4">
                 {variation.icon}
               </div>
@@ -153,10 +153,8 @@ const Variation = () => {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100">
-                <span className="text-xs text-gray-500">
-                  ID: {variation.id}
-                </span>
+              <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200">
+                <span className=" text-gray-500">ID: {variation.id}</span>
                 <div className="flex gap-2">
                   <button
                     onClick={() =>
