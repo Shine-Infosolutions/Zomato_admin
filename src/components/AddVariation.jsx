@@ -359,10 +359,10 @@ const AddVariation = () => {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
-            {isEditing ? "Edit Variation" : "Add New Variation"}
+            {isEditing ? "Update Variation" : "Add New Variation"}
           </h1>
           <p className="text-gray-600 text-sm">
-            {isEditing ? "Update variation details" : "Create a new variation"}
+            {isEditing ? "Edit variation details" : "Create a new variation"}
           </p>
         </div>
       </div>

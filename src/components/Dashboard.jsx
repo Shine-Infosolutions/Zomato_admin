@@ -32,8 +32,12 @@ const Dashboard = () => {
   const getPageTitle = () => {
     const path = location.pathname;
     if (path.includes("/category")) return "Category Management";
+    if (path.includes("/add-category")) return "Category Management";
     if (path.includes("/items")) return "Items Management";
+    if (path.includes("/add-item")) return "Items Management";
     if (path.includes("/variation")) return "Variation Management";
+    if (path.includes("/add-variation")) return "Variation Management";
+
     if (path.includes("/add-new")) return "Add New";
     if (path.includes("/settings")) return "Settings";
     return "Dashboard";
