@@ -4,7 +4,7 @@ import { useAppContext } from "../context/AppContext";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import photoImg from "../assets/photo.jpeg";
 // import Register from "../context/Register";
-import Dashboard from "../context/Dashboard";
+import Dashboard from "./Dashboard";
 
 const Login = ({ switchToRegister }) => {
   const [email, setEmail] = useState("");
@@ -36,17 +36,17 @@ const Login = ({ switchToRegister }) => {
 
         <div>
           <label
-            htmlFor="email"
+            htmlFor="number"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Admin Email
+            Admin Number
           </label>
           <input
-            type="email"
-            id="email"
+            type="number"
+            id="number"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
+            placeholder="Enter your number"
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
           />
