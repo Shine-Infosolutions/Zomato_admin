@@ -7,14 +7,14 @@ import photoImg from "../assets/photo.jpeg";
 import Dashboard from "./Dashboard";
 
 const Login = ({ switchToRegister }) => {
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { error, login } = useAppContext();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    login(email, password);
+    await login(phone, password);
   };
 
   const togglePasswordVisibility = () => {
@@ -43,9 +43,9 @@ const Login = ({ switchToRegister }) => {
           </label>
           <input
             type="number"
-            id="number"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="phone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="Enter your number"
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"

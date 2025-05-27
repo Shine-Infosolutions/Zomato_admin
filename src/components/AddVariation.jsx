@@ -292,7 +292,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 const AddVariation = () => {
   const [variationName, setVariationName] = useState("");
   const [stock, setStock] = useState("");
-  const [varieties, setVarieties] = useState([{ name: "" }]);
+  const [varieties, setVarieties] = useState([{ name: "", price: "" }]);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
 
@@ -302,10 +304,35 @@ const AddVariation = () => {
   // Check if we're editing an existing variation
   useEffect(() => {
     if (location.state && location.state.variation) {
-      const { id, name, options } = location.state.variation;
-      setVariationName(name);
+      const { id, itemName, price, options } = location.state.variation;
+      setVariationName(itemName || name);
+      // setVariationPrice(price || "");
       setStock(options.length || 0);
-      setVarieties(options.map((option) => ({ name: option })));
+      // Check if options are objects with name and price or just strings
+      if (options && Array.isArray(options)) {
+        if (
+          options[0] &&
+          typeof options[0] === "object" &&
+          "name" in options[0]
+        ) {
+          // Options with name and price
+          setVarieties(
+            options.map((opt) => ({
+              name: opt.name || "",
+              price: opt.price || 0,
+            }))
+          );
+        } else {
+          // Simple string options
+          setVarieties(
+            options.map((opt) => ({
+              name: opt || "",
+              price: 0,
+            }))
+          );
+        }
+      }
+
       setIsEditing(true);
       setEditId(id);
     }
@@ -323,29 +350,65 @@ const AddVariation = () => {
     }
   };
 
-  const handleVarietyChange = (index, value) => {
+  // Update the handleVarietyChange function to handle both name and price
+  const handleVarietyChange = (index, field, value) => {
     const newVarieties = [...varieties];
-    newVarieties[index].name = value;
+    newVarieties[index][field] = value;
     setVarieties(newVarieties);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+    setError("");
 
-    const variationData = {
-      id: isEditing ? editId : Date.now(),
-      name: variationName,
-      options: varieties.map((v) => v.name),
-      status: "Publish",
-    };
+    // // Log each variety's name and price, and the stock
+    // console.log("Stock:", stock);
+    // varieties.forEach((variety, idx) => {
+    //   console.log(
+    //     `Variety ${idx + 1}: Name = ${variety.name}, Price = ${variety.price}`
+    //   );
+    // });
 
-    if (isEditing) {
-      console.log("Variation updated:", variationData);
-    } else {
-      console.log("Variation added:", variationData);
+    // We'll send the first variety as the main variation
+    const mainVariety = varieties[0];
+    if (!variationName || !stock || !mainVariety.name || !mainVariety.price) {
+      setError("Please fill all fields.");
+      return;
     }
 
-    navigate("/dashboard/variation");
+    // Prepare payload
+    const payload = {
+      name: variationName,
+      stock: Number(stock),
+      price: Number(mainVariety.price),
+    };
+
+    console.log("Submitting variation:", payload);
+
+    try {
+      const response = await fetch(
+        "https://hotelbuddhaavenue.vercel.app/api/admin/addvariation",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      const data = await response.json();
+      if (response.ok && data.message === "variation added successfully") {
+        setMessage("Variation added successfully!");
+        setVariationName("");
+        setStock("");
+        setVarieties([{ name: "", price: "" }]);
+        // Optionally, navigate to the variations list:
+        // navigate("/dashboard/variation");
+      } else {
+        setError(data.message || "Failed to add variation");
+      }
+    } catch (err) {
+      setError("Network error");
+    }
   };
 
   return (
@@ -375,7 +438,7 @@ const AddVariation = () => {
               htmlFor="variationName"
               className="block text-gray-700 font-medium mb-2"
             >
-              Variation Name
+              Item Name
             </label>
             <input
               type="text"
@@ -383,10 +446,27 @@ const AddVariation = () => {
               value={variationName}
               onChange={(e) => setVariationName(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="e.g. Size, Color, Flavor"
+              placeholder="e.g. Pizza, Coffee, Ice Cream"
               required
             />
           </div>
+          {/* <div className="mb-4">
+            <label
+              htmlFor="variationPrice"
+              className="block text-gray-700 font-medium mb-2"
+            >
+              Variation Price
+            </label>
+            <input
+              type="number"
+              id="variationPrice"
+              value={variationPrice || ""}
+              onChange={(e) => setVariationPrice(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              placeholder="₹"
+              required
+            />
+          </div> */}
 
           {/* Stock */}
           <div className="mb-4">
@@ -429,10 +509,22 @@ const AddVariation = () => {
                   <input
                     type="text"
                     value={variety.name}
-                    onChange={(e) => handleVarietyChange(index, e.target.value)}
+                    onChange={(e) =>
+                      handleVarietyChange(index, "name", e.target.value)
+                    }
                     className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     placeholder={`Variety ${index + 1}`}
                     required
+                  />
+                  <input
+                    type="number"
+                    value={variety.price || "₹"}
+                    onChange={(e) =>
+                      handleVarietyChange(index, "price", e.target.value)
+                    }
+                    className="w-24 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="₹"
+                    min="0"
                   />
                   {varieties.length > 1 && (
                     <button

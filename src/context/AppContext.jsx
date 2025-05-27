@@ -4,6 +4,8 @@ import React, { createContext, useState, useContext } from "react";
 // Create the context
 const AppContext = createContext();
 
+const API_URL = "https://hotelbuddhaavenue.vercel.app/";
+
 // Create a provider component
 export const AppProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -14,18 +16,29 @@ export const AppProvider = ({ children }) => {
   ]);
 
   // Login function
-  const login = (email, password) => {
-    const user = users.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (user) {
-      setUser({ email: user.email });
-      setIsLoggedIn(true);
-      setError("");
-      return true;
-    } else {
-      setError("Invalid email or password");
+  const login = async (phone, password) => {
+    try {
+      const response = await fetch(`${API_URL}api/admin/adminlogin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: "admin",
+          phone,
+          password,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok && data.message === "login successfull") {
+        setUser({ phone });
+        setIsLoggedIn(true);
+        setError("");
+        return true;
+      } else {
+        setError(data.message || "Login failed");
+        return false;
+      }
+    } catch (err) {
+      setError("Network error");
       return false;
     }
   };

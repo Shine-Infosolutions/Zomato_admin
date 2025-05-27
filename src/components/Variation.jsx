@@ -16,53 +16,74 @@ import { useNavigate } from "react-router-dom";
 const Variation = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+  const [message, setMessage] = useState(""); // <-- Add this line
+  const [error, setError] = useState(""); // <-- If not already present
 
   // Sample data - replace with your actual data
+  // First, update the sample data to include prices
   const variations = [
     {
       id: 1,
       name: "Size",
       itemName: "Pizza",
-      options: ["Small", "Medium", "Large"],
+      options: [
+        { name: "Small", price: 199 },
+        { name: "Medium", price: 299 },
+        { name: "Large", price: 399 },
+      ],
       status: "Publish",
       icon: <FaLayerGroup className="text-amber-500" />,
     },
-    {
-      id: 2,
-      name: "Spice Level",
-      itemName: "Curry",
-      options: ["Mild", "Medium", "Hot", "Extra Hot"],
-      status: "Publish",
-      icon: <FaFilter className="text-red-500" />,
-    },
+    // {
+    //   id: 2,
+    //   name: "Spice Level",
+    //   itemName: "Curry",
+    //   options: [
+    //     { name: "Mild", price: 0 },
+    //     { name: "Medium", price: 0 },
+    //     { name: "Hot", price: 20 },
+    //     { name: "Extra Hot", price: 30 },
+    //   ],
+    //   status: "Publish",
+    //   icon: <FaFilter className="text-red-500" />,
+    // },
     {
       id: 3,
       name: "Toppings",
       itemName: "Ice Cream",
       options: [
-        "Chocolate",
-        "Sprinkles",
-        "Nuts",
-        "Caramel",
-        "Fruits",
-        "Whipped Cream",
+        { name: "Chocolate", price: 25 },
+        { name: "Sprinkles", price: 15 },
+        { name: "Nuts", price: 30 },
+        { name: "Caramel", price: 20 },
+        { name: "Fruits", price: 35 },
+        { name: "Whipped Cream", price: 25 },
       ],
       status: "Unpublish",
       icon: <MdOutlineColorLens className="text-purple-500" />,
     },
-    {
-      id: 4,
-      name: "Temperature",
-      itemName: "Coffee",
-      options: ["Hot", "Warm", "Iced"],
-      status: "Publish",
-      icon: <MdOutlineLocalDrink className="text-blue-500" />,
-    },
+    // {
+    //   id: 4,
+    //   name: "Temperature",
+    //   itemName: "Coffee",
+    //   options: [
+    //     { name: "Hot", price: 0 },
+    //     { name: "Warm", price: 0 },
+    //     { name: "Iced", price: 20 },
+    //   ],
+    //   status: "Publish",
+    //   icon: <MdOutlineLocalDrink className="text-blue-500" />,
+    // },
     {
       id: 5,
       name: "Sweetness",
       itemName: "Desert",
-      options: ["No Sugar", "Less Sugar", "Normal", "Extra Sweet"],
+      options: [
+        { name: "No Sugar", price: 0 },
+        { name: "Less Sugar", price: 0 },
+        { name: "Normal", price: 0 },
+        { name: "Extra Sweet", price: 10 },
+      ],
       status: "Publish",
       icon: <GrCubes className="text-yellow-500" />,
     },
@@ -119,11 +140,11 @@ const Variation = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-lg text-gray-800">
-                  {variation.name}
+                  {variation.itemName}
                 </h3>
-                <p className="text-sm text-gray-500">
+                {/* <p className="text-sm text-gray-500">
                   Applied to: {variation.itemName}
-                </p>
+                </p> */}
               </div>
               <span
                 className={`px-3 py-1 text-xs font-semibold rounded-full ${
@@ -145,9 +166,14 @@ const Variation = () => {
                   {variation.options.map((option, index) => (
                     <span
                       key={index}
-                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs"
+                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs flex items-center"
                     >
-                      {option}
+                      <span>{option.name}</span>
+                      {option.price > 0 && (
+                        <span className="ml-1 bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">
+                          +₹{option.price}
+                        </span>
+                      )}
                     </span>
                   ))}
                 </div>
@@ -181,6 +207,16 @@ const Variation = () => {
                   >
                     <FaTrash />
                   </button>
+                  {message && (
+                    <div className="bg-green-100 text-green-700 p-3 rounded mb-4">
+                      {message}
+                    </div>
+                  )}
+                  {error && (
+                    <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
+                      {error}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
