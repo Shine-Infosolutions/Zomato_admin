@@ -121,7 +121,7 @@ const Dashboard = () => {
                       className="flex items-center p-2 hover:bg-red-800 rounded-md"
                     >
                       <MdLibraryAdd className="text-xl" />
-                      <span className="ml-4">Add New</span>
+                      <span className="ml-4">Add On</span>
                     </Link>
                   </li>
                 </ul>

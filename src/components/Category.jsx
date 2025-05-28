@@ -97,7 +97,7 @@ const Category = () => {
           className="flex justify-center items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-lg hover:from-red-600 hover:to-red-700 transition-all shadow-md"
         >
           <FaPlus />
-          <span>Add Variation</span>
+          <span>Add Category</span>
         </button>
       </div>
       <div className="bg-white rounded-lg shadow p-4 sm:p-6">

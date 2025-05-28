@@ -35,10 +35,18 @@ const AddVariation = () => {
   // Check if we're editing an existing variation
   useEffect(() => {
     if (location.state && location.state.variation) {
-      const { id, itemName, price, options } = location.state.variation;
-      setItemName(itemName || name);
+      const {
+        id,
+        itemId: navItemId,
+        itemName,
+        price,
+        options,
+      } = location.state.variation;
+      setItemId(navItemId || "");
+      setItemName(itemName || "");
+      // setItemName(itemName || name);
       // setVariationPrice(price || "");
-      setStock(options.length || 0);
+      setStock(options && options.length ? options[0].stock || "" : "");
       // Check if options are objects with name and price or just strings
       if (options && Array.isArray(options)) {
         if (
@@ -115,6 +123,14 @@ const AddVariation = () => {
     setMessage("");
     setError("");
 
+    // Check for duplicate variation names (case-insensitive)
+    const names = varieties.map((v) => v.name.trim().toLowerCase());
+    const hasDuplicate = names.some((name, idx) => names.indexOf(name) !== idx);
+    if (hasDuplicate) {
+      setError("Duplicate variation names are not allowed.");
+      return;
+    }
+
     if (!itemId || !stock || varieties.some((v) => !v.name || !v.price)) {
       setError("Please fill all fields.");
       return;
@@ -165,6 +181,7 @@ const AddVariation = () => {
       setMessage("All varieties added successfully!");
       setStock("");
       setVarieties([{ name: "", price: "" }]);
+      navigate("/dashboard/variation");
     }
   };
 
@@ -212,7 +229,7 @@ const AddVariation = () => {
             >
               <option value="">Select an item</option>
               {items.map((item) => (
-                <option key={item.id} value={item._id}>
+                <option key={item._id} value={item._id}>
                   {item.name}
                 </option>
               ))}

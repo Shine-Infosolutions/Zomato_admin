@@ -1,17 +1,9 @@
 // src/components/Variation.jsx
 import React, { useState, useEffect } from "react";
-import {
-  FaSearch,
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaLayerGroup,
-  FaFilter,
-} from "react-icons/fa";
-import { GrCubes } from "react-icons/gr";
-import { LuSplit } from "react-icons/lu";
-import { MdOutlineColorLens, MdOutlineLocalDrink } from "react-icons/md";
+import { FaSearch, FaPlus, FaEdit } from "react-icons/fa";
+import { RxCross2 } from "react-icons/rx";
 import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 const Variation = () => {
   const [items, setItems] = useState([]);
@@ -19,76 +11,6 @@ const Variation = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState(""); // <-- Add this line
   const [error, setError] = useState(""); // <-- If not already present
-
-  // Sample data - replace with your actual data
-  // First, update the sample data to include prices
-  // const variations = [
-  //   {
-  //     id: 1,
-  //     name: "Size",
-  //     itemName: "Pizza",
-  //     options: [
-  //       { name: "Small", price: 199 },
-  //       { name: "Medium", price: 299 },
-  //       { name: "Large", price: 399 },
-  //     ],
-  //     status: "Publish",
-  //     icon: <FaLayerGroup className="text-amber-500" />,
-  //   },
-  //   // {
-  //   //   id: 2,
-  //   //   name: "Spice Level",
-  //   //   itemName: "Curry",
-  //   //   options: [
-  //   //     { name: "Mild", price: 0 },
-  //   //     { name: "Medium", price: 0 },
-  //   //     { name: "Hot", price: 20 },
-  //   //     { name: "Extra Hot", price: 30 },
-  //   //   ],
-  //   //   status: "Publish",
-  //   //   icon: <FaFilter className="text-red-500" />,
-  //   // },
-  //   {
-  //     id: 3,
-  //     name: "Toppings",
-  //     itemName: "Ice Cream",
-  //     options: [
-  //       { name: "Chocolate", price: 25 },
-  //       { name: "Sprinkles", price: 15 },
-  //       { name: "Nuts", price: 30 },
-  //       { name: "Caramel", price: 20 },
-  //       { name: "Fruits", price: 35 },
-  //       { name: "Whipped Cream", price: 25 },
-  //     ],
-  //     status: "Unpublish",
-  //     icon: <MdOutlineColorLens className="text-purple-500" />,
-  //   },
-  //   // {
-  //   //   id: 4,
-  //   //   name: "Temperature",
-  //   //   itemName: "Coffee",
-  //   //   options: [
-  //   //     { name: "Hot", price: 0 },
-  //   //     { name: "Warm", price: 0 },
-  //   //     { name: "Iced", price: 20 },
-  //   //   ],
-  //   //   status: "Publish",
-  //   //   icon: <MdOutlineLocalDrink className="text-blue-500" />,
-  //   // },
-  //   {
-  //     id: 5,
-  //     name: "Sweetness",
-  //     itemName: "Desert",
-  //     options: [
-  //       { name: "No Sugar", price: 0 },
-  //       { name: "Less Sugar", price: 0 },
-  //       { name: "Normal", price: 0 },
-  //       { name: "Extra Sweet", price: 10 },
-  //     ],
-  //     status: "Publish",
-  //     icon: <GrCubes className="text-yellow-500" />,
-  //   },
-  // ];
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -105,21 +27,41 @@ const Variation = () => {
     fetchItems();
   }, []);
 
-  // Optional: handle delete for a variation (UI only, not backend)
-  const handleDeleteVariation = (itemId, variationId) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item._id === itemId
-          ? {
-              ...item,
-              variation: item.variation.filter((v) => v._id !== variationId),
-            }
-          : item
-      )
-    );
-    setMessage(
-      "Variation deleted from UI (implement backend delete if needed)"
-    );
+  const handleDeleteVariation = async (itemId, variationId) => {
+    if (!window.confirm("Are you sure you want to delete this variation?"))
+      return;
+
+    try {
+      const res = await fetch(
+        "https://hotelbuddhaavenue.vercel.app/api/admin/deletevariation",
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ variationId, itemId }),
+        }
+      );
+      const data = await res.json();
+
+      if (res.ok) {
+        setItems((prev) =>
+          prev.map((item) =>
+            item._id === itemId
+              ? {
+                  ...item,
+                  variation: item.variation.filter(
+                    (v) => v._id !== variationId
+                  ),
+                }
+              : item
+          )
+        );
+        setMessage("Variation deleted successfully!");
+      } else {
+        setError(data.message || "Failed to delete variation");
+      }
+    } catch {
+      setError("Network error");
+    }
   };
 
   const filteredItems = items
@@ -133,15 +75,6 @@ const Variation = () => {
 
   return (
     <div className="p-2 sm:p-6 bg-red-50">
-      {/* <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Variation Management
-        </h1>
-        <p className="text-gray-600">
-          Manage your product variations and options
-        </p>
-      </div> */}
-
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <div className="flex-1 relative">
           <input
@@ -172,8 +105,34 @@ const Variation = () => {
             className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center p-4 border-b border-gray-200">
-              <div className="flex-1">
+              <div className="flex-1 flex items-center justify-between">
                 <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
+                <button
+                  className="ml-2 p-2 text-blue-600 rounded-md hover:text-blue-900"
+                  onClick={() =>
+                    navigate("/dashboard/add-variation", {
+                      state: {
+                        variation: {
+                          id: item._id,
+                          itemId: item._id,
+                          itemName: item.name,
+                          options: item.variation, // pass the variations array
+                        },
+                      },
+                    })
+                  }
+                  title="Edit Variations"
+                >
+                  <FaEdit />
+                </button>
+
+                {/* <button
+                  className=" px-3 py-1 text-xs font-semibold  "
+                  onClick={() => handleDeleteItem(item._id)}
+                  title="Delete Item"
+                >
+                  <FaTrash color="red" />
+                </button> */}
                 {/* <p className="text-sm text-gray-500">
                   Applied to: {variation.itemName}
                 </p> */}
@@ -213,7 +172,7 @@ const Variation = () => {
                           onClick={() => handleDeleteVariation(item._id, v._id)}
                           title="Delete Variation"
                         >
-                          <FaTrash color="red" />
+                          <RxCross2 />
                         </button>
                       </div>
                     ))
