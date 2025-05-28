@@ -1,5 +1,5 @@
 // src/components/Variation.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaSearch,
   FaPlus,
@@ -14,6 +14,7 @@ import { MdOutlineColorLens, MdOutlineLocalDrink } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 
 const Variation = () => {
+  const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const [message, setMessage] = useState(""); // <-- Add this line
@@ -21,78 +22,114 @@ const Variation = () => {
 
   // Sample data - replace with your actual data
   // First, update the sample data to include prices
-  const variations = [
-    {
-      id: 1,
-      name: "Size",
-      itemName: "Pizza",
-      options: [
-        { name: "Small", price: 199 },
-        { name: "Medium", price: 299 },
-        { name: "Large", price: 399 },
-      ],
-      status: "Publish",
-      icon: <FaLayerGroup className="text-amber-500" />,
-    },
-    // {
-    //   id: 2,
-    //   name: "Spice Level",
-    //   itemName: "Curry",
-    //   options: [
-    //     { name: "Mild", price: 0 },
-    //     { name: "Medium", price: 0 },
-    //     { name: "Hot", price: 20 },
-    //     { name: "Extra Hot", price: 30 },
-    //   ],
-    //   status: "Publish",
-    //   icon: <FaFilter className="text-red-500" />,
-    // },
-    {
-      id: 3,
-      name: "Toppings",
-      itemName: "Ice Cream",
-      options: [
-        { name: "Chocolate", price: 25 },
-        { name: "Sprinkles", price: 15 },
-        { name: "Nuts", price: 30 },
-        { name: "Caramel", price: 20 },
-        { name: "Fruits", price: 35 },
-        { name: "Whipped Cream", price: 25 },
-      ],
-      status: "Unpublish",
-      icon: <MdOutlineColorLens className="text-purple-500" />,
-    },
-    // {
-    //   id: 4,
-    //   name: "Temperature",
-    //   itemName: "Coffee",
-    //   options: [
-    //     { name: "Hot", price: 0 },
-    //     { name: "Warm", price: 0 },
-    //     { name: "Iced", price: 20 },
-    //   ],
-    //   status: "Publish",
-    //   icon: <MdOutlineLocalDrink className="text-blue-500" />,
-    // },
-    {
-      id: 5,
-      name: "Sweetness",
-      itemName: "Desert",
-      options: [
-        { name: "No Sugar", price: 0 },
-        { name: "Less Sugar", price: 0 },
-        { name: "Normal", price: 0 },
-        { name: "Extra Sweet", price: 10 },
-      ],
-      status: "Publish",
-      icon: <GrCubes className="text-yellow-500" />,
-    },
-  ];
+  // const variations = [
+  //   {
+  //     id: 1,
+  //     name: "Size",
+  //     itemName: "Pizza",
+  //     options: [
+  //       { name: "Small", price: 199 },
+  //       { name: "Medium", price: 299 },
+  //       { name: "Large", price: 399 },
+  //     ],
+  //     status: "Publish",
+  //     icon: <FaLayerGroup className="text-amber-500" />,
+  //   },
+  //   // {
+  //   //   id: 2,
+  //   //   name: "Spice Level",
+  //   //   itemName: "Curry",
+  //   //   options: [
+  //   //     { name: "Mild", price: 0 },
+  //   //     { name: "Medium", price: 0 },
+  //   //     { name: "Hot", price: 20 },
+  //   //     { name: "Extra Hot", price: 30 },
+  //   //   ],
+  //   //   status: "Publish",
+  //   //   icon: <FaFilter className="text-red-500" />,
+  //   // },
+  //   {
+  //     id: 3,
+  //     name: "Toppings",
+  //     itemName: "Ice Cream",
+  //     options: [
+  //       { name: "Chocolate", price: 25 },
+  //       { name: "Sprinkles", price: 15 },
+  //       { name: "Nuts", price: 30 },
+  //       { name: "Caramel", price: 20 },
+  //       { name: "Fruits", price: 35 },
+  //       { name: "Whipped Cream", price: 25 },
+  //     ],
+  //     status: "Unpublish",
+  //     icon: <MdOutlineColorLens className="text-purple-500" />,
+  //   },
+  //   // {
+  //   //   id: 4,
+  //   //   name: "Temperature",
+  //   //   itemName: "Coffee",
+  //   //   options: [
+  //   //     { name: "Hot", price: 0 },
+  //   //     { name: "Warm", price: 0 },
+  //   //     { name: "Iced", price: 20 },
+  //   //   ],
+  //   //   status: "Publish",
+  //   //   icon: <MdOutlineLocalDrink className="text-blue-500" />,
+  //   // },
+  //   {
+  //     id: 5,
+  //     name: "Sweetness",
+  //     itemName: "Desert",
+  //     options: [
+  //       { name: "No Sugar", price: 0 },
+  //       { name: "Less Sugar", price: 0 },
+  //       { name: "Normal", price: 0 },
+  //       { name: "Extra Sweet", price: 10 },
+  //     ],
+  //     status: "Publish",
+  //     icon: <GrCubes className="text-yellow-500" />,
+  //   },
+  // ];
 
-  const handleDelete = (id) => {
-    console.log("Deleting variation with id:", id);
-    alert(`Variation with ID ${id} has been deleted`);
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await fetch(
+          "https://hotelbuddhaavenue.vercel.app/api/user/items"
+        );
+        const data = await res.json();
+        setItems(data.itemsdata || []);
+      } catch {
+        setError("Failed to fetch items");
+      }
+    };
+    fetchItems();
+  }, []);
+
+  // Optional: handle delete for a variation (UI only, not backend)
+  const handleDeleteVariation = (itemId, variationId) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item._id === itemId
+          ? {
+              ...item,
+              variation: item.variation.filter((v) => v._id !== variationId),
+            }
+          : item
+      )
+    );
+    setMessage(
+      "Variation deleted from UI (implement backend delete if needed)"
+    );
   };
+
+  const filteredItems = items
+    .filter(
+      (item) => Array.isArray(item.variation) && item.variation.length > 0
+    )
+    .filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  // ...existing code...
 
   return (
     <div className="p-2 sm:p-6 bg-red-50">
@@ -129,24 +166,19 @@ const Variation = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {variations.map((variation) => (
+        {filteredItems.map((item) => (
           <div
-            key={variation.id}
+            key={item._id}
             className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center p-4 border-b border-gray-200">
-              <div className="p-3 rounded-full bg-gray-100 mr-4">
-                {variation.icon}
-              </div>
               <div className="flex-1">
-                <h3 className="font-bold text-lg text-gray-800">
-                  {variation.itemName}
-                </h3>
+                <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
                 {/* <p className="text-sm text-gray-500">
                   Applied to: {variation.itemName}
                 </p> */}
               </div>
-              <span
+              {/* <span
                 className={`px-3 py-1 text-xs font-semibold rounded-full ${
                   variation.status === "Publish"
                     ? "bg-green-100 text-green-800"
@@ -154,7 +186,7 @@ const Variation = () => {
                 }`}
               >
                 {variation.status}
-              </span>
+              </span> */}
             </div>
 
             <div className="p-4">
@@ -163,36 +195,48 @@ const Variation = () => {
                   Options:
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {variation.options.map((option, index) => (
-                    <span
-                      key={index}
-                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs flex items-center"
-                    >
-                      <span>{option.name}</span>
-                      {option.price > 0 && (
-                        <span className="ml-1 bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">
-                          +₹{option.price}
+                  {item.variation && item.variation.length > 0 ? (
+                    item.variation.map((v) => (
+                      <div
+                        key={v._id}
+                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs flex items-center mb-2"
+                        style={{
+                          minWidth: 180,
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <span>
+                          {v.name} - ₹{v.price} (Stock: {v.stock})
                         </span>
-                      )}
-                    </span>
-                  ))}
+                        <button
+                          className="ml-2"
+                          onClick={() => handleDeleteVariation(item._id, v._id)}
+                          title="Delete Variation"
+                        >
+                          <FaTrash color="red" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-gray-400">No variations</span>
+                  )}
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200">
-                <span className=" text-gray-500">ID: {variation.id}</span>
+              {/* <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200">
+                <span className=" text-gray-500">ID: {item.id}</span>
                 <div className="flex gap-2">
                   <button
                     onClick={() =>
                       navigate("/dashboard/add-variation", {
                         state: {
                           variation: {
-                            id: variation.id,
-                            name: variation.name,
-                            itemName: variation.itemName,
-                            options: variation.options,
-                            status: variation.status,
-                            iconType: variation.iconType || "size", // Pass the icon type as a string instead of a React element
+                            id: item.id,
+                            name: item.name,
+                            // itemName: variation.itemName,
+                            // options: variation.options,
+                            // status: variation.status,
+                            // iconType: variation.iconType || "size", // Pass the icon type as a string instead of a React element
                           },
                         },
                       })
@@ -201,12 +245,23 @@ const Variation = () => {
                   >
                     <FaEdit />
                   </button>
-                  <button
-                    onClick={() => handleDelete(variation.id)}
-                    className="p-2 text-red-600 rounded-md hover:text-red-900"
-                  >
-                    <FaTrash />
-                  </button>
+                  <div>
+                    {message && <div style={{ color: "green" }}>{message}</div>}
+                    {error && <div style={{ color: "red" }}>{error}</div>}
+                    <ul>
+                      {item.variation.map((variation) => (
+                        <li
+                          key={variation._id}
+                          style={{ display: "flex", alignItems: "center" }}
+                        >
+                          <span style={{ flex: 1 }}>{variation.name}</span>
+                          <button onClick={() => handleDelete(variation._id)}>
+                            <FaTrash color="red" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                   {message && (
                     <div className="bg-green-100 text-green-700 p-3 rounded mb-4">
                       {message}
@@ -218,7 +273,7 @@ const Variation = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         ))}

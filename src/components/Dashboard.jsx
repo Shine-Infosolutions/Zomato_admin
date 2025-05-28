@@ -117,7 +117,7 @@ const Dashboard = () => {
                   </li>
                   <li>
                     <Link
-                      to="/dashboard/add-new"
+                      to="/dashboard/add-on"
                       className="flex items-center p-2 hover:bg-red-800 rounded-md"
                     >
                       <MdLibraryAdd className="text-xl" />
