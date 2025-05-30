@@ -191,7 +191,7 @@ const Dashboard = () => {
               {user?.email}
             </span>
             <button
-              onClick={(handleLogout) => logout(navigate)}
+              onClick={handleLogout}
               className=" border-gray-300 shadow text-red-500 px-2 md:px-4 py-1 md:py-2 text-sm md:text-base rounded hover:bg-red-500 hover:text-white transition-colors"
             >
               Logout
