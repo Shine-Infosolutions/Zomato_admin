@@ -74,7 +74,7 @@ const AddMealAddon = () => {
     <div className="p-4 bg-white rounded-lg shadow">
       <div className="mb-6 flex items-center">
         <button
-          onClick={() => navigate("/dashboard/items")}
+          onClick={() => navigate("/dashboard")}
           className="mr-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200"
         >
           <FaArrowLeft />

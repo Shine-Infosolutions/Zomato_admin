@@ -100,8 +100,12 @@ const AddVariation = () => {
   // }, []);
 
   const handleAddVariety = () => {
-    setVarieties([...varieties, { name: "" }]);
-    console.log("Varieties after adding:", varieties);
+    // Prevent adding if an empty name already exists
+    if (varieties.some((v) => v.name.trim() === "")) {
+      window.alert("Please fill the existing empty variety name first!");
+      return;
+    }
+    setVarieties([...varieties, { name: "", price: 0 }]);
   };
 
   const handleRemoveVariety = async (index) => {
@@ -136,11 +140,35 @@ const AddVariation = () => {
     setVarieties(newVarieties);
   };
 
-  // Update the handleVarietyChange function to handle both name and price
   const handleVarietyChange = (index, field, value) => {
-    const newVarieties = [...varieties];
-    newVarieties[index][field] = value;
-    setVarieties(newVarieties);
+    let newValue = value;
+    if (field === "price") {
+      newValue = Number(value);
+      if (newValue < 0) return; // Prevent negative prices
+    }
+
+    // Check for duplicate: same name (case-insensitive) and same price, but different index
+    const nameToCheck =
+      field === "name"
+        ? value.trim().toLowerCase()
+        : varieties[index].name.trim().toLowerCase();
+    const priceToCheck =
+      field === "price" ? Number(value) : Number(varieties[index].price);
+
+    const isDuplicate = varieties.some(
+      (v, i) =>
+        i !== index &&
+        v.name.trim().toLowerCase() === nameToCheck &&
+        Number(v.price) === priceToCheck
+    );
+    if (isDuplicate) {
+      window.alert("This variety already exists!");
+      return;
+    }
+
+    const updatedVarieties = [...varieties];
+    updatedVarieties[index][field] = newValue;
+    setVarieties(updatedVarieties);
   };
 
   const handleSubmit = async (e) => {
@@ -149,15 +177,17 @@ const AddVariation = () => {
     setError("");
 
     // Check for duplicate variation names (case-insensitive)
-    const names = varieties.map((v) => v.name.trim().toLowerCase());
-    const hasDuplicate = names.some((name, idx) => names.indexOf(name) !== idx);
+    const price = varieties.map((v) => v.name.trim().toLowerCase());
+    const hasDuplicate = varieties.some((v, idx) =>
+      varieties.some(
+        (v2, idx2) =>
+          idx !== idx2 &&
+          v.name.trim().toLowerCase() === v2.name.trim().toLowerCase() &&
+          Number(v.price) === Number(v2.price)
+      )
+    );
     if (hasDuplicate) {
-      setError("Duplicate variation names are not allowed.");
-      return;
-    }
-
-    if (!itemId || !stock || varieties.some((v) => !v.name || !v.price)) {
-      setError("Please fill all fields.");
+      setError("Duplicate variety with the same price is not allowed.");
       return;
     }
 
