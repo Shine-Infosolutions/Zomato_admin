@@ -57,6 +57,7 @@ const AddVariation = () => {
           // Options with name and price
           setVarieties(
             options.map((opt) => ({
+              _id: opt._id,
               name: opt.name || "",
               price: opt.price || 0,
             }))
@@ -119,6 +120,7 @@ const AddVariation = () => {
           }
         );
         const data = await res.json();
+        console.log("Delete API response:", data);
         if (!res.ok) {
           setError(data.message || "Failed to delete variety.");
           return;

@@ -15,7 +15,7 @@ import { LuSplit } from "react-icons/lu";
 import { MdLibraryAdd } from "react-icons/md";
 import { FaShoppingBag, FaAngleDown } from "react-icons/fa";
 import Category from "./Category";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import AddCategory from "./AddCategory";
 
 const Dashboard = () => {
@@ -23,6 +23,42 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orderDropdownOpen, setOrderDropdownOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    // Call your backend logout API
+    try {
+      const res = await fetch(
+        "https://hotelbuddhaavenue.vercel.app/api/admin/adminlogout",
+        {
+          method: "POST", // or "GET" if your backend expects that
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // if your backend uses cookies
+        }
+      );
+      // Try to parse JSON only if response is JSON
+      let data = {};
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      }
+
+      if (res.ok) {
+        alert(data.message || "Logged out successfully!");
+      } else {
+        alert(data.message || "Logout failed. Please try again.");
+      }
+    } catch (err) {
+      alert("Logout failed. Please try again.");
+      console.error("Logout failed", err);
+    }
+
+    // Remove token or user info from localStorage/sessionStorage
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
+
+    // Redirect to login page
+    navigate("/admin", { replace: true });
+  };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -155,7 +191,7 @@ const Dashboard = () => {
               {user?.email}
             </span>
             <button
-              onClick={logout}
+              onClick={(handleLogout) => logout(navigate)}
               className=" border-gray-300 shadow text-red-500 px-2 md:px-4 py-1 md:py-2 text-sm md:text-base rounded hover:bg-red-500 hover:text-white transition-colors"
             >
               Logout
