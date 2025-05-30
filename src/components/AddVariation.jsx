@@ -105,7 +105,7 @@ const AddVariation = () => {
       window.alert("Please fill the existing empty variety name first!");
       return;
     }
-    setVarieties([...varieties, { name: "", price: 0 }]);
+    setVarieties([...varieties, { name: "", price: "" }]);
   };
 
   const handleRemoveVariety = async (index) => {
@@ -364,7 +364,6 @@ const AddVariation = () => {
                     }
                     className="w-24 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     placeholder="₹"
-                    min="0"
                   />
                   {varieties.length > 1 && (
                     <button
