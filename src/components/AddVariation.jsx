@@ -103,12 +103,35 @@ const AddVariation = () => {
     console.log("Varieties after adding:", varieties);
   };
 
-  const handleRemoveVariety = (index) => {
-    if (varieties.length > 1) {
-      const newVarieties = [...varieties];
-      newVarieties.splice(index, 1);
-      setVarieties(newVarieties);
+  const handleRemoveVariety = async (index) => {
+    // If editing (variation exists in DB), call the delete API
+    if (isEditing && varieties[index]._id) {
+      try {
+        const res = await fetch(
+          "https://hotelbuddhaavenue.vercel.app/api/admin/deletevariation",
+          {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              variationId: varieties[index]._id,
+              itemId: itemId,
+            }),
+          }
+        );
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.message || "Failed to delete variety.");
+          return;
+        }
+      } catch {
+        setError("Network error while deleting variety.");
+        return;
+      }
     }
+    // Remove from local state
+    const newVarieties = [...varieties];
+    newVarieties.splice(index, 1);
+    setVarieties(newVarieties);
   };
 
   // Update the handleVarietyChange function to handle both name and price

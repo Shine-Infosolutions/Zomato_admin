@@ -12,6 +12,29 @@ const Variation = () => {
   const [message, setMessage] = useState(""); // <-- Add this line
   const [error, setError] = useState(""); // <-- If not already present
 
+  // useEffect(() => {
+  //   const fetchItems = async () => {
+  //     try {
+  //       const res = await fetch(
+  //         "https://hotelbuddhaavenue.vercel.app/api/user/items"
+  //       );
+  //       const data = await res.json();
+  //       setItems(data.itemsdata || []);
+  //     } catch {
+  //       setError("Failed to fetch items");
+  //     }
+  //   };
+
+  //   fetchItems();
+
+  //   // Refetch when the page regains focus (user returns from editing)
+  //   const handleFocus = () => fetchItems();
+  //   window.addEventListener("focus", handleFocus);
+
+  //   return () => {
+  //     window.removeEventListener("focus", handleFocus);
+  //   };
+  // }, []);
   useEffect(() => {
     const fetchItems = async () => {
       try {
