@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { FaSave, FaLeaf } from "react-icons/fa";
+import { FaSave, FaLeaf, FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const AddMealAddon = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [itemId, setItemId] = useState("");
   const [addonName, setAddonName] = useState("");
@@ -70,7 +72,20 @@ const AddMealAddon = () => {
 
   return (
     <div className="p-4 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-bold mb-4">Add Meal Add-On</h2>
+      <div className="mb-6 flex items-center">
+        <button
+          onClick={() => navigate("/dashboard/items")}
+          className="mr-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200"
+        >
+          <FaArrowLeft />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Add Meal Add-On</h1>
+          <p className="text-gray-600 text-sm">
+            Here you can add add-ons to your meal items.
+          </p>
+        </div>
+      </div>
       {success && (
         <div className="mb-4 p-3 rounded bg-green-100 text-green-700 text-center">
           {success}
