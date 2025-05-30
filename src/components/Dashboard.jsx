@@ -25,17 +25,19 @@ const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const handleLogout = async () => {
-    // Call your backend logout API
+    // Show confirm dialog first
+    const confirmLogout = window.confirm("Are you sure you want to logout?");
+    if (!confirmLogout) return; // If Cancel, do nothing
+
     try {
       const res = await fetch(
         "https://hotelbuddhaavenue.vercel.app/api/admin/adminlogout",
         {
-          method: "POST", // or "GET" if your backend expects that
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include", // if your backend uses cookies
+          credentials: "include",
         }
       );
-      // Try to parse JSON only if response is JSON
       let data = {};
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
@@ -43,23 +45,17 @@ const Dashboard = () => {
       }
 
       if (res.ok) {
-        alert(data.message || "Logged out successfully!");
+        // Proceed with logout
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        navigate("/admin", { replace: true });
       } else {
         alert(data.message || "Logout failed. Please try again.");
       }
     } catch (err) {
       alert("Logout failed. Please try again.");
-      console.error("Logout failed", err);
     }
-
-    // Remove token or user info from localStorage/sessionStorage
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("token");
-
-    // Redirect to login page
-    navigate("/admin", { replace: true });
   };
-
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
