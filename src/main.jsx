@@ -32,7 +32,7 @@ createRoot(document.getElementById("root")).render(
             <Route path="add-variation" element={<AddVariation />} />
             <Route path="add-on" element={<AddOn />} />
             {/* <Route path="add-new" element={<AddNew />} /> */}
-            <Route path="settings" element={<Settings />} />
+            {/* <Route path="settings" element={<Settings />} /> */}
             <Route path="*" element={<div>Welcome to the Dashboard!</div>} />
           </Route>
         </Routes>
