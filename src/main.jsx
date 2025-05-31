@@ -11,10 +11,10 @@ import Items from "./components/Items.jsx";
 import AddItem from "./components/AddItem.jsx";
 import Variation from "./components/Variation.jsx";
 import AddVariation from "./components/AddVariation.jsx";
-import Settings from "./components/Settings.jsx";
-import OrderManagement from "./components/OrderManagement.jsx";
 import AddOn from "./components/AddOn.jsx";
-
+import DeliveryBoy from "./components/DeliveryBoy.jsx";
+import DineInDetails from "./components/ordersmangement/DineInDetails.jsx";
+import OnlineDetails from "./components/ordersmangement/OnlineDetails.jsx";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AppProvider>
@@ -34,6 +34,17 @@ createRoot(document.getElementById("root")).render(
             {/* <Route path="add-new" element={<AddNew />} /> */}
             {/* <Route path="settings" element={<Settings />} /> */}
             <Route path="*" element={<div>Welcome to the Dashboard!</div>} />
+          </Route>
+          <Route path="/delivery" element={<DeliveryBoy />} />
+          <Route>
+            <Route
+              path="/order-management/dine-in-orders"
+              element={<DineInDetails />}
+            />
+            <Route
+              path="/order-management/online-orders"
+              element={<OnlineDetails />}
+            />
           </Route>
         </Routes>
       </BrowserRouter>
