@@ -57,7 +57,7 @@ const AddItem = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const itemData = {
@@ -79,13 +79,29 @@ const AddItem = () => {
       hasTimeCustomization,
     };
 
-    if (isEditing) {
-      console.log("Item updated:", itemData);
-    } else {
-      console.log("Item added:", itemData);
-    }
+    try {
+      const response = await fetch(
+        "https://hotelbuddhaavenue.vercel.app/api/admin/additem",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(itemData),
+        }
+      );
 
-    navigate("/dashboard/items");
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(result.message || "Item added successfully!");
+        navigate("/dashboard/items");
+      } else {
+        alert(result.message || "Failed to add item.");
+      }
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
   };
 
   return (
