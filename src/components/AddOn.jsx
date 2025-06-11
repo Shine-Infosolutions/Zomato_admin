@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSave, FaLeaf, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { AiOutlineStock } from "react-icons/ai";
 
 const AddMealAddon = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const AddMealAddon = () => {
   const [isVeg, setIsVeg] = useState(true);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [isStock, setIsStock] = useState(false);
 
   // Fetch items for dropdown
   useEffect(() => {
@@ -146,18 +148,57 @@ const AddMealAddon = () => {
           />
         </div>
         {/* Veg/Non-Veg Toggle */}
-        <div className="mb-6 flex items-center gap-3">
-          <FaLeaf className={isVeg ? "text-green-500" : "text-gray-400"} />
-          <span className="text-gray-700">Vegetarian</span>
-          <input
-            type="checkbox"
-            checked={isVeg}
-            onChange={() => setIsVeg(!isVeg)}
-            className="ml-2"
-          />
-          <span className="ml-2 text-gray-700">
-            {isVeg ? "Veg" : "Non-Veg"}
-          </span>
+        <div className="mb-4">
+          <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
+            <AiOutlineStock className="text-blue-500" />
+            <span className="text-sm">Is Stock?</span>
+            <div className="relative ml-auto w-10 align-middle select-none">
+              <input
+                type="checkbox"
+                id="toggleStock"
+                checked={isStock}
+                onChange={() => setIsStock(!isStock)}
+                className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                style={{
+                  transform: isStock ? "translateX(100%)" : "translateX(0)",
+                  backgroundColor: isStock
+                    ? "rgb(34, 197, 94)"
+                    : "rgb(239, 68, 68)",
+                  borderColor: isStock
+                    ? "rgb(34, 197, 100 )"
+                    : "rgb(239, 68, 80)",
+                  transition: "transform 0.3s ease-in-out",
+                }}
+              />
+              <label
+                htmlFor="toggleStock"
+                className={`block overflow-hidden h-6 rounded-full cursor-pointer ${
+                  isStock ? "bg-green-100" : "bg-red-100"
+                }`}
+              ></label>
+            </div>
+          </div>
+        </div>
+        <div className="mb-4">
+          <label
+            htmlFor="itemStatus"
+            className="block text-gray-700 font-medium mb-2"
+          >
+            Status
+          </label>
+          <div className="flex-1">
+            <select
+              id="itemStatus"
+              value={itemStatus}
+              onChange={(e) => setItemStatus(e.target.value)}
+              className="w-full px-3 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
+              required
+            >
+              <option value="Publish">Select a Status</option>
+              <option value="Publish">Publish</option>
+              <option value="Unpublish">Unpublish</option>
+            </select>
+          </div>
         </div>
         <div className="flex justify-end">
           <button
