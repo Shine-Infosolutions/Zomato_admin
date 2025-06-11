@@ -2,14 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { FaSave, FaUpload } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  FaLeaf,
-  FaWrench,
-  FaEgg,
-  FaStar,
-  FaRandom,
-  FaClock,
-} from "react-icons/fa";
+import { FaLeaf, FaWrench, FaStar, FaArrowLeft } from "react-icons/fa";
+import { AiOutlineStock } from "react-icons/ai";
 
 const AddItem = () => {
   const [itemName, setItemName] = useState("");
@@ -24,11 +18,15 @@ const AddItem = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
   const [isVeg, setIsVeg] = useState(false);
-  const [isCustomizable, setIsCustomizable] = useState(false);
-  const [hasEggs, setHasEggs] = useState(false);
-  const [isRecommended, setIsRecommended] = useState(false);
-  const [hasVariation, setHasVariation] = useState(false);
-  const [hasTimeCustomization, setHasTimeCustomization] = useState(false);
+  // const [hasEggs, setHasEggs] = useState(false);
+  // const [isRecommended, setIsRecommended] = useState(false);
+  // const [hasVariation, setHasVariation] = useState(false);
+  // const [hasTimeCustomization, setHasTimeCustomization] = useState(false);
+  const [isStock, setIsStock] = useState(false);
+  const [shortDescription, setShortDescription] = useState("");
+  const [longDescription, setLongDescription] = useState("");
+  // Add this to your state declarations
+  const [rating, setRating] = useState(0);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -56,6 +54,10 @@ const AddItem = () => {
       reader.readAsDataURL(file);
     }
   };
+  // Add this function to handle star clicks
+  const handleStarClick = (selectedRating) => {
+    setRating(selectedRating);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,7 +66,7 @@ const AddItem = () => {
       id: isEditing ? editId : Date.now(),
       name: itemName,
       category: itemCategory,
-      basePrice: parseFloat(basePrice),
+      price: parseFloat(basePrice),
       discountedPrice: parseFloat(discountedPrice) || parseFloat(basePrice),
       gst: parseFloat(gst),
       status: itemStatus,
@@ -72,11 +74,14 @@ const AddItem = () => {
       // In a real app, you'd upload the image to a server and store the URL
       image: itemImage ? itemImage.name : null,
       isVeg,
-      isCustomizable,
-      hasEggs,
-      isRecommended,
-      hasVariation,
-      hasTimeCustomization,
+      isStock,
+      shortDescription,
+      longDescription,
+      rating: rating,
+      // hasEggs,
+      // isRecommended,
+      // hasVariation,
+      // hasTimeCustomization,
     };
 
     try {
@@ -106,13 +111,21 @@ const AddItem = () => {
 
   return (
     <div className="p-2 sm:p-6 px-2 sm:px-4 bg-red-50">
-      <div className="mb-4 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-          {isEditing ? "Update Menu Item" : "Add New Menu Item"}
-        </h2>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          {isEditing ? "Edit menu item details" : "Create a new menu item"}
-        </p>
+      <div className="mb-6 flex items-center">
+        <button
+          onClick={() => navigate("/dashboard/items")}
+          className="mr-4  mb-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200"
+        >
+          <FaArrowLeft />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {isEditing ? "Update Items" : "Add New Items"}
+          </h1>
+          <p className="text-gray-600 text-sm">
+            {isEditing ? "Edit Items details" : "Create a new items"}
+          </p>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-3 sm:p-6">
@@ -159,12 +172,12 @@ const AddItem = () => {
               </select>
             </div>
 
-            <div className="flex-1">
+            {/* <div className="flex-1">
               <label
                 htmlFor="addonCategory"
                 className="block text-gray-700 font-medium mb-2"
               >
-                Addon Category
+                Add Category
               </label>
               <select
                 id="addonCategory"
@@ -177,7 +190,7 @@ const AddItem = () => {
                 <option value="Sauces">Sauces</option>
                 <option value="Sides">Sides</option>
               </select>
-            </div>
+            </div> */}
           </div>
 
           {/* Row 2 */}
@@ -202,7 +215,7 @@ const AddItem = () => {
               />
             </div>
 
-            <div className="flex-1">
+            {/* <div className="flex-1">
               <label
                 htmlFor="discountedPrice"
                 className="block text-gray-700 font-medium mb-2"
@@ -219,7 +232,7 @@ const AddItem = () => {
                 min="0"
                 step="0.01"
               />
-            </div>
+            </div> */}
 
             <div className="flex-1">
               <label
@@ -259,6 +272,7 @@ const AddItem = () => {
                 className="w-full px-3 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
                 required
               >
+                <option value="Publish">Select a Status</option>
                 <option value="Publish">Publish</option>
                 <option value="Unpublish">Unpublish</option>
               </select>
@@ -301,11 +315,73 @@ const AddItem = () => {
               </p> */}
             </div>
           </div>
+
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <div className="flex-1">
+              <label
+                htmlFor="basePrice"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                Short Description
+              </label>
+              <input
+                type="text"
+                id="shortDescription"
+                value={shortDescription}
+                onChange={(e) => setShortDescription(e.target.value)}
+                className="w-full px-3 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
+                placeholder="Enter your short description"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+
+            {/* <div className="flex-1">
+              <label
+                htmlFor="discountedPrice"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                Discounted Price (₹)
+              </label>
+              <input
+                type="number"
+                id="discountedPrice"
+                value={discountedPrice}
+                onChange={(e) => setDiscountedPrice(e.target.value)}
+                className="w-full px-3 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
+                placeholder="Enter discounted price"
+                min="0"
+                step="0.01"
+              />
+            </div> */}
+
+            <div className="flex-1">
+              <label
+                htmlFor="basePrice"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                Long Description
+              </label>
+              <textarea
+                type="text"
+                id="longDescription"
+                value={longDescription}
+                onChange={(e) => setLongDescription(e.target.value)}
+                className="w-full px-3 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
+                placeholder="Enter your Long description"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
           {/* Toggle Switches Row */}
-          <div className="mb-6">
-            {/* <label className="block text-gray-700 font-medium mb-2">
+
+          {/* <label className="block text-gray-700 font-medium mb-2">
               Item Attributes
             </label> */}
+          <div className="mb-6">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {/* Veg Toggle */}
               <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
@@ -338,41 +414,67 @@ const AddItem = () => {
                 </div>
               </div>
 
-              {/* Customizable Toggle */}
+              {/* Stock Toggle */}
               <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
-                <FaWrench className="text-blue-500" />
-                <span className="text-sm">Is Customizable ?</span>
+                <AiOutlineStock className="text-blue-500" />
+                <span className="text-sm">Is Stock?</span>
                 <div className="relative ml-auto w-10 align-middle select-none">
                   <input
                     type="checkbox"
-                    id="toggleCustomizable"
-                    checked={isCustomizable}
-                    onChange={() => setIsCustomizable(!isCustomizable)}
+                    id="toggleStock"
+                    checked={isStock}
+                    onChange={() => setIsStock(!isStock)}
                     className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
                     style={{
-                      transform: isCustomizable
-                        ? "translateX(100%)"
-                        : "translateX(0)",
-                      backgroundColor: isCustomizable
+                      transform: isStock ? "translateX(100%)" : "translateX(0)",
+                      backgroundColor: isStock
                         ? "rgb(34, 197, 94)"
                         : "rgb(239, 68, 68)",
-                      borderColor: isCustomizable
+                      borderColor: isStock
                         ? "rgb(34, 197, 100 )"
                         : "rgb(239, 68, 80)",
                       transition: "transform 0.3s ease-in-out",
                     }}
                   />
                   <label
-                    htmlFor="toggleCustomizable"
+                    htmlFor="toggleStock"
                     className={`block overflow-hidden h-6 rounded-full cursor-pointer ${
-                      isCustomizable ? "bg-green-100" : "bg-red-100"
+                      isStock ? "bg-green-100" : "bg-red-100"
                     }`}
                   ></label>
                 </div>
               </div>
-
-              {/* Eggs Toggle */}
+              {/* Rating Stars */}
               <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
+                <div className="flex-1 mb-4">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Item Rating
+                  </label>
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => handleStarClick(star)}
+                        className="focus:outline-none"
+                      >
+                        <FaStar
+                          className={`text-2xl ${
+                            star <= rating ? "text-yellow-400" : "text-gray-300"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    <span className="ml-2 text-gray-600">
+                      {rating > 0 ? `${rating}/5` : "No rating"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Eggs Toggle */}
+            {/* <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
                 <FaEgg className="text-yellow-500" />
                 <span className="text-sm">Is Eggs ?</span>
                 <div className="relative ml-auto w-10 align-middle select-none">
@@ -400,10 +502,10 @@ const AddItem = () => {
                     }`}
                   ></label>
                 </div>
-              </div>
+              </div> */}
 
-              {/* Recommended Toggle */}
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
+            {/* Recommended Toggle */}
+            {/* <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
                 <FaStar className="text-amber-500" />
                 <span className="text-sm">is Recommended ?</span>
                 <div className="relative ml-auto w-10 align-middle select-none">
@@ -433,10 +535,10 @@ const AddItem = () => {
                     }`}
                   ></label>
                 </div>
-              </div>
+              </div> */}
 
-              {/* Variation Toggle */}
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
+            {/* Variation Toggle */}
+            {/* <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
                 <FaRandom className="text-purple-500" />
                 <span className="text-sm">Is Variation ?</span>
                 <div className="relative ml-auto w-10 align-middle select-none">
@@ -466,10 +568,10 @@ const AddItem = () => {
                     }`}
                   ></label>
                 </div>
-              </div>
+              </div> */}
 
-              {/* Time Customization Toggle */}
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
+            {/* Time Customization Toggle */}
+            {/* <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
                 <FaClock className="text-blue-400" />
                 <span className="text-sm">Time Customization</span>
                 <div className="relative ml-auto w-10 align-middle select-none">
@@ -501,8 +603,7 @@ const AddItem = () => {
                     }`}
                   ></label>
                 </div>
-              </div>
-            </div>
+              </div> */}
           </div>
 
           <div className="flex gap-3 justify-end">

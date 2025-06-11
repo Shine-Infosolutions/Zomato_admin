@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSave, FaTrash, FaArrowLeft } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
+import { AiOutlineStock } from "react-icons/ai";
 
 const AddVariation = () => {
   const [itemName, setItemName] = useState("");
@@ -12,6 +13,8 @@ const AddVariation = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
   const [items, setItems] = useState([]);
+  const [isStock, setIsStock] = useState(false);
+  const [itemStatus, setItemStatus] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -311,21 +314,61 @@ const AddVariation = () => {
           {/* Stock */}
           <div className="mb-4">
             <label
-              htmlFor="stock"
+              htmlFor="toggleStock"
               className="block text-gray-700 font-medium mb-2"
             >
               Stock
             </label>
-            <input
-              type="number"
-              id="stock"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              placeholder="Enter available stock"
-              min="0"
-              required
-            />
+            <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow mb-2">
+              <AiOutlineStock className="text-blue-500" />
+              <span className="text-sm">Is Stock?</span>
+              <div className="relative ml-auto w-10 align-middle select-none">
+                <input
+                  type="checkbox"
+                  id="toggleStock"
+                  checked={isStock}
+                  onChange={() => setIsStock(!isStock)}
+                  className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                  style={{
+                    transform: isStock ? "translateX(100%)" : "translateX(0)",
+                    backgroundColor: isStock
+                      ? "rgb(34, 197, 94)"
+                      : "rgb(239, 68, 68)",
+                    borderColor: isStock
+                      ? "rgb(34, 197, 100 )"
+                      : "rgb(239, 68, 80)",
+                    transition: "transform 0.3s ease-in-out",
+                  }}
+                />
+                <label
+                  htmlFor="toggleStock"
+                  className={`block overflow-hidden h-6 rounded-full cursor-pointer ${
+                    isStock ? "bg-green-100" : "bg-red-100"
+                  }`}
+                ></label>
+              </div>
+            </div>
+          </div>
+          <div className="mb-4">
+            <label
+              htmlFor="itemStatus"
+              className="block text-gray-700 font-medium mb-2"
+            >
+              Status
+            </label>
+            <div className="flex-1">
+              <select
+                id="itemStatus"
+                value={itemStatus}
+                onChange={(e) => setItemStatus(e.target.value)}
+                className="w-full px-3 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
+                required
+              >
+                <option value="Publish">Select a Status</option>
+                <option value="Publish">Publish</option>
+                <option value="Unpublish">Unpublish</option>
+              </select>
+            </div>
           </div>
 
           {/* Varieties */}

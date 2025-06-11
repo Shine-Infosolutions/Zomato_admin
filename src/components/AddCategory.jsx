@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { FaSave } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
+import { AiOutlineStock } from "react-icons/ai";
 
 const AddCategory = () => {
   const [categoryName, setCategoryName] = useState("");
@@ -10,6 +11,7 @@ const AddCategory = () => {
   const [categoryItem, setCategoryItem] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [isStock, setIsStock] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -80,7 +82,8 @@ const AddCategory = () => {
               required
             />
           </div>
-          <div className="mb-4">
+
+          {/* <div className="mb-4">
             <label
               htmlFor="categoryItem"
               className="block text-gray-700 font-medium mb-2"
@@ -97,25 +100,37 @@ const AddCategory = () => {
               placeholder="Enter item count"
               required
             />
-          </div>
-
-          <div className="mb-6">
-            <label
-              htmlFor="categoryStatus"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Status
-            </label>
-            <select
-              id="categoryStatus"
-              name="categoryStatus"
-              value={categoryStatus}
-              onChange={(e) => setCategoryStatus(e.target.value)}
-              className="w-full px-3 sm:px-4 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
-            >
-              <option value="Publish">Publish</option>
-              <option value="Unpublish">Unpublish</option>
-            </select>
+          </div> */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
+              <AiOutlineStock className="text-blue-500" />
+              <span className="text-sm">Is Stock?</span>
+              <div className="relative ml-auto w-10 align-middle select-none">
+                <input
+                  type="checkbox"
+                  id="toggleStock"
+                  checked={isStock}
+                  onChange={() => setIsStock(!isStock)}
+                  className="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                  style={{
+                    transform: isStock ? "translateX(100%)" : "translateX(0)",
+                    backgroundColor: isStock
+                      ? "rgb(34, 197, 94)"
+                      : "rgb(239, 68, 68)",
+                    borderColor: isStock
+                      ? "rgb(34, 197, 100 )"
+                      : "rgb(239, 68, 80)",
+                    transition: "transform 0.3s ease-in-out",
+                  }}
+                />
+                <label
+                  htmlFor="toggleStock"
+                  className={`block overflow-hidden h-6 rounded-full cursor-pointer ${
+                    isStock ? "bg-green-100" : "bg-red-100"
+                  }`}
+                ></label>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end">
