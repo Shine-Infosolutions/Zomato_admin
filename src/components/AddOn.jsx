@@ -13,6 +13,7 @@ const AddMealAddon = () => {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [isStock, setIsStock] = useState(false);
+  const [itemStatus, setItemStatus] = useState("");
 
   // Fetch items for dropdown
   useEffect(() => {
@@ -180,12 +181,12 @@ const AddMealAddon = () => {
           </div>
         </div>
         <div className="mb-4">
-          <label
+          {/* <label
             htmlFor="itemStatus"
             className="block text-gray-700 font-medium mb-2"
           >
             Status
-          </label>
+          </label> */}
           <div className="flex-1">
             <select
               id="itemStatus"

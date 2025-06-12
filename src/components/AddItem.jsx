@@ -25,8 +25,9 @@ const AddItem = () => {
   const [isStock, setIsStock] = useState(false);
   const [shortDescription, setShortDescription] = useState("");
   const [longDescription, setLongDescription] = useState("");
-  // Add this to your state declarations
   const [rating, setRating] = useState(0);
+
+  const [categoryOptions, setCategoryOptions] = useState([]);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -42,6 +43,19 @@ const AddItem = () => {
       setEditId(id);
     }
   }, [location]);
+
+  useEffect(() => {
+    fetch("https://hotelbuddhaavenue.vercel.app/api/user/category")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.categories)) {
+          setCategoryOptions(data.categories);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch categories:", err);
+      });
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -65,7 +79,7 @@ const AddItem = () => {
     const itemData = {
       id: isEditing ? editId : Date.now(),
       name: itemName,
-      category: itemCategory,
+      category: Number(itemCategory),
       price: parseFloat(basePrice),
       discountedPrice: parseFloat(discountedPrice) || parseFloat(basePrice),
       gst: parseFloat(gst),
@@ -165,10 +179,11 @@ const AddItem = () => {
                 required
               >
                 <option value="">Select a category</option>
-                <option value="Appetizers">Appetizers</option>
-                <option value="Main Course">Main Course</option>
-                <option value="Desserts">Desserts</option>
-                <option value="Beverages">Beverages</option>
+                {categoryOptions.map((category) => (
+                  <option key={category._id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -251,7 +266,6 @@ const AddItem = () => {
                 min="0"
                 max="100"
                 step="0.01"
-                required
               />
             </div>
           </div>

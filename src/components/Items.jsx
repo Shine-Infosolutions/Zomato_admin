@@ -128,10 +128,10 @@ const Items = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <tr key={item.id}>
                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    {item.id}
+                    {index + 1}
                   </td>
                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                     {item.name}
