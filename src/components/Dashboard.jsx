@@ -24,12 +24,15 @@ const Dashboard = () => {
   const [orderDropdownOpen, setOrderDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Replace your handleLogout function with this:
   const handleLogout = async () => {
     // Show confirm dialog first
     const confirmLogout = window.confirm("Are you sure you want to logout?");
     if (!confirmLogout) return; // If Cancel, do nothing
 
     try {
+      // Call the API to logout on the server
       const res = await fetch(
         "https://hotelbuddhaavenue.vercel.app/api/admin/adminlogout",
         {
@@ -38,24 +41,20 @@ const Dashboard = () => {
           credentials: "include",
         }
       );
-      let data = {};
-      const contentType = res.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await res.json();
-      }
 
-      if (res.ok) {
-        // Proceed with logout
-        localStorage.removeItem("token");
-        sessionStorage.removeItem("token");
-        navigate("/admin", { replace: true });
-      } else {
-        alert(data.message || "Logout failed. Please try again.");
-      }
+      // Always perform local logout regardless of API response
+      logout(); // This uses the context's logout function
+
+      // Navigate to login page
+      navigate("/admin", { replace: true });
     } catch (err) {
-      alert("Logout failed. Please try again.");
+      console.error("Logout error:", err);
+      // Still perform local logout even if API call fails
+      logout();
+      navigate("/admin", { replace: true });
     }
   };
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };

@@ -1,6 +1,6 @@
 // src/components/AddCategory.jsx
 import React, { useState, useEffect } from "react";
-import { FaSave } from "react-icons/fa";
+import { FaSave, FaArrowLeft } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import { AiOutlineStock } from "react-icons/ai";
@@ -51,15 +51,21 @@ const AddCategory = () => {
 
   return (
     <div className="p-2 sm:p-6 px-2 sm:px-4 bg-red-50">
-      <div className="mb-4 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-          {isEditing ? "Update Category" : "Add New Category"}
-        </h2>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          {isEditing
-            ? "Edit category details"
-            : "Create a new category for your items"}
-        </p>
+      <div className="mb-6 flex items-center">
+        <button
+          onClick={() => navigate("/dashboard/items")}
+          className="mr-4  mb-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200"
+        >
+          <FaArrowLeft />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {isEditing ? "Update Category" : "Add New Categories"}
+          </h1>
+          <p className="text-gray-600 text-sm">
+            {isEditing ? "Edit Category details" : "Create a new categories"}
+          </p>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-3 sm:p-6">

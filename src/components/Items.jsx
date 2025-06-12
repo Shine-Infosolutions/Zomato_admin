@@ -12,11 +12,23 @@ const Items = () => {
 
   // Fetch categories from API
   useEffect(() => {
+    setCategories({
+      1: "Category 1",
+      2: "Category 2",
+      3: "Category 3",
+      4: "Category 4",
+      5: "Category 5",
+      6: "Category 6",
+      7: "Category 7",
+      8: "Category 8",
+      9: "Category 9",
+      10: "Category 10",
+    });
+
     fetch("https://hotelbuddhaavenue.vercel.app/api/user/category")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.categories)) {
-          // Create a mapping of category IDs to names for easy lookup
           const categoryMap = {};
           data.categories.forEach((category) => {
             categoryMap[category.id] = category.name;
@@ -26,6 +38,7 @@ const Items = () => {
       })
       .catch((err) => {
         console.error("Failed to fetch categories:", err);
+        // Fallback already set
       });
   }, []);
 
@@ -76,6 +89,13 @@ const Items = () => {
     return categories[categoryId] || categoryId || "-";
   };
 
+  const filteredItems = items.filter(
+    (item) =>
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getCategoryName(item.categoryId)
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase())
+  );
   return (
     <div className="p-2 sm:p-6 bg-red-50">
       {/* Search and Add Section */}
@@ -83,9 +103,9 @@ const Items = () => {
         <div className="flex-1 relative">
           <input
             type="text"
-            id="variationSearch"
-            name="variationSearch"
-            placeholder="Search variations..."
+            id="itemsSearch"
+            name="itemsSearch"
+            placeholder="Search items..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
@@ -128,8 +148,8 @@ const Items = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {items.map((item, index) => (
-                <tr key={item.id}>
+              {filteredItems.map((item, index) => (
+                <tr key={item._id || index}>
                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                     {index + 1}
                   </td>
@@ -137,7 +157,9 @@ const Items = () => {
                     {item.name}
                   </td>
                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    {getCategoryName(item.categoryId)}
+                    {getCategoryName(
+                      item.categoryId || item.category || item.category_id
+                    )}
                   </td>
                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                     ₹{item.price}

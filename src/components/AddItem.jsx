@@ -10,7 +10,7 @@ const AddItem = () => {
   const [itemCategory, setItemCategory] = useState("");
   const [basePrice, setBasePrice] = useState("");
   const [discountedPrice, setDiscountedPrice] = useState("");
-  const [gst, setGst] = useState("5");
+  const [gst, setGst] = useState("");
   const [itemStatus, setItemStatus] = useState("Publish");
   const [addonCategory, setAddonCategory] = useState("");
   const [itemImage, setItemImage] = useState(null);
@@ -106,6 +106,7 @@ const AddItem = () => {
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify(itemData),
         }
       );
@@ -459,30 +460,22 @@ const AddItem = () => {
                 </div>
               </div>
               {/* Rating Stars */}
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow">
-                <div className="flex-1 mb-4">
+              <div className=" gap-2">
+                <div className="flex-1">
                   <label className="block text-gray-700 font-medium mb-2">
                     Item Rating
                   </label>
-                  <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => handleStarClick(star)}
-                        className="focus:outline-none"
-                      >
-                        <FaStar
-                          className={`text-2xl ${
-                            star <= rating ? "text-yellow-400" : "text-gray-300"
-                          }`}
-                        />
-                      </button>
-                    ))}
-                    <span className="ml-2 text-gray-600">
-                      {rating > 0 ? `${rating}/5` : "No rating"}
-                    </span>
-                  </div>
+                  <input
+                    type="number"
+                    id="rating"
+                    value={rating} // Change from gst to rating
+                    onChange={(e) => setRating(parseFloat(e.target.value))} // Parse as float
+                    className="w-full px-3 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
+                    placeholder="Out of 5"
+                    min="0"
+                    max="5"
+                    step="0.1" // Allow decimal increments of 0.1
+                  />
                 </div>
               </div>
             </div>

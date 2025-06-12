@@ -16,6 +16,7 @@ import DeliveryBoy from "./components/DeliveryBoy.jsx";
 import DineInDetails from "./components/ordersmangement/DineInDetails.jsx";
 import OnlineDetails from "./components/ordersmangement/OnlineDetails.jsx";
 import MainDeatil from "./components/ordersmangement/MainDeatil.jsx";
+import AddOnPage from "./components/AddOnPage.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -32,7 +33,8 @@ createRoot(document.getElementById("root")).render(
             <Route path="add-item" element={<AddItem />} />
             <Route path="variation" element={<Variation />} />
             <Route path="add-variation" element={<AddVariation />} />
-            <Route path="add-on" element={<AddOn />} />
+            <Route path="add-on" element={<AddOnPage />} />
+            <Route path="add-add-on" element={<AddOn />} />
             {/* <Route path="add-new" element={<AddNew />} /> */}
             {/* <Route path="settings" element={<Settings />} /> */}
             <Route path="*" element={<div>Welcome to the Dashboard!</div>} />
