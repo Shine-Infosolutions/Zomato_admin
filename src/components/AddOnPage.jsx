@@ -94,7 +94,7 @@ const Addons = () => {
         </div>
         <button
           onClick={() => navigate("/dashboard/add-add-on")}
-          className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg hover:from-red-600 hover:to-red-700 transition-all"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg hover:from-red-600 hover:to-red-700 transition-all"
         >
           <FaPlus />
           <span>Add New</span>
