@@ -76,93 +76,97 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       <div
-        className={`bg-red-700 text-white ${
-          sidebarOpen ? "w-64" : "w-16"
-        } transition-all duration-300 ease-in-out fixed h-full z-10`}
+        className={`bg-red-700 text-white transition-all duration-300 ease-in-out fixed h-full z-30 ${
+          sidebarOpen 
+            ? "w-64" 
+            : "w-12 lg:w-12 -translate-x-full lg:translate-x-0"
+        } ${sidebarOpen ? "translate-x-0" : ""}`}
       >
-        <div className="p-4 flex justify-between items-center">
+        <div className={`${sidebarOpen ? 'p-4 flex justify-between items-center' : ''}`}>
           {sidebarOpen && <span className="font-bold text-lg">Dashboard</span>}
           <button
             onClick={toggleSidebar}
-            className={`p-2 rounded-md hover:bg-red-800 ${
-              !sidebarOpen && "mx-auto"
-            }`}
+            className={`${sidebarOpen ? 'p-2 rounded-md hover:bg-red-800' : 'flex items-center p-3 hover:bg-red-800 rounded-md w-full'}`}
           >
-            {sidebarOpen ? <FaTimes /> : <FaBars />}
+            {sidebarOpen ? <FaTimes className="text-lg" /> : <FaBars className="text-xl" />}
           </button>
         </div>
         <ul>
           <li className="mb-2">
-            <div className="relative">
-              <button
-                onClick={() => setOrderDropdownOpen(!orderDropdownOpen)}
-                className="w-full flex items-center p-3 hover:bg-red-800 rounded-md"
-              >
-                <FaShoppingBag className="text-xl" />
-                {sidebarOpen && (
-                  <>
-                    <Link
-                      to="/dashboard/order"
-                      className="flex items-center p-2 hover:bg-red-800 rounded-md"
-                    >
-                      <span className="ml-4">Order Management</span>
-                    </Link>
-                    <FaAngleDown
-                      className={`ml-auto transition-transform ${
-                        orderDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </>
-                )}
-              </button>
-              {sidebarOpen && !orderDropdownOpen && (
-                <ul className="pl-8">
-                  <li>
-                    <Link
-                      to="/dashboard/category"
-                      className="flex items-center p-2 hover:bg-red-800 rounded-md"
-                    >
-                      <BiSolidCategory className="text-xl" />
-                      <span className="ml-4">Category</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/dashboard/items"
-                      className="flex items-center p-2 hover:bg-red-800 rounded-md"
-                    >
-                      <FaSitemap className="text-xl" />
-                      <span className="ml-4">Items</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/dashboard/variation"
-                      className="flex items-center p-2 hover:bg-red-800 rounded-md"
-                    >
-                      <LuSplit className="text-xl" />
-                      <span className="ml-4">Variation</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/dashboard/add-on"
-                      className="flex items-center p-2 hover:bg-red-800 rounded-md"
-                    >
-                      <MdLibraryAdd className="text-xl" />
-                      <span className="ml-4">Add On</span>
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </div>
+            <Link
+              to="/dashboard/order"
+              className="flex items-center p-3 hover:bg-red-800 rounded-md"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FaShoppingBag className="text-xl" />
+              {sidebarOpen && <span className="ml-4">Orders</span>}
+            </Link>
+          </li>
+          <li className="mb-2">
+            <Link
+              to="/dashboard/category"
+              className="flex items-center p-3 hover:bg-red-800 rounded-md"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <BiSolidCategory className="text-xl" />
+              {sidebarOpen && <span className="ml-4">Category</span>}
+            </Link>
+          </li>
+          <li className="mb-2">
+            <Link
+              to="/dashboard/items"
+              className="flex items-center p-3 hover:bg-red-800 rounded-md"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FaSitemap className="text-xl" />
+              {sidebarOpen && <span className="ml-4">Items</span>}
+            </Link>
+          </li>
+          <li className="mb-2">
+            <Link
+              to="/dashboard/variation"
+              className="flex items-center p-3 hover:bg-red-800 rounded-md"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <LuSplit className="text-xl" />
+              {sidebarOpen && <span className="ml-4">Variation</span>}
+            </Link>
+          </li>
+          <li className="mb-2">
+            <Link
+              to="/dashboard/add-on"
+              className="flex items-center p-3 hover:bg-red-800 rounded-md"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <MdLibraryAdd className="text-xl" />
+              {sidebarOpen && <span className="ml-4">Add On</span>}
+            </Link>
+          </li>
+          <li className="mb-2">
+            <Link
+              to="/dashboard/delivery-boy"
+              className="flex items-center p-3 hover:bg-red-800 rounded-md"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FaUsers className="text-xl" />
+              {sidebarOpen && <span className="ml-4">Delivery Boys</span>}
+            </Link>
           </li>
           <li className="mb-2">
             <Link
               to="/dashboard/settings"
               className="flex items-center p-3 hover:bg-red-800 rounded-md"
+              onClick={() => setSidebarOpen(false)}
             >
               <FaCog className="text-xl" />
               {sidebarOpen && <span className="ml-4">Settings</span>}
@@ -173,27 +177,37 @@ const Dashboard = () => {
 
       {/* Main content */}
       <div
-        className={`flex-1 ${
-          sidebarOpen ? "ml-16 md:ml-64" : "ml-16"
-        } transition-all duration-300 ease-in-out`}
+        className={`flex-1 transition-all duration-300 ease-in-out ${
+          sidebarOpen 
+            ? "lg:ml-64 ml-0" 
+            : "lg:ml-12 ml-0"
+        }`}
       >
         <header className="flex justify-between items-center p-3 md:p-6 bg-white shadow">
-          <h1 className="text-lg md:text-xl font-bold text-red-500">
-            {getPageTitle()}
-          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleSidebar}
+              className="lg:hidden p-2 rounded-md text-red-500 hover:bg-red-50"
+            >
+              <FaBars className="text-xl" />
+            </button>
+            <h1 className="text-lg md:text-xl font-bold text-red-500">
+              {getPageTitle()}
+            </h1>
+          </div>
           <div className="flex items-center gap-2 md:gap-4">
             <span className="text-sm md:text-base text-gray-600 hidden sm:inline">
               {user?.email}
             </span>
             <button
               onClick={handleLogout}
-              className=" border-gray-300 shadow text-red-500 px-2 md:px-4 py-1 md:py-2 text-sm md:text-base rounded hover:bg-red-500 hover:text-white transition-colors"
+              className="border-gray-300 shadow text-red-500 px-2 md:px-4 py-1 md:py-2 text-sm md:text-base rounded hover:bg-red-500 hover:text-white transition-colors"
             >
               Logout
             </button>
           </div>
         </header>
-        <div className="p-0 sm:p-6">
+        <div className="p-3 sm:p-6">
           <Outlet />
         </div>
       </div>

@@ -86,18 +86,11 @@ const Login = ({ switchToRegister }) => {
           Login
         </button>
 
-        {/* <div className="text-center mt-4 flex justify-between">
-          <a href="#" className="text-sm text-red-500 hover:underline">
-            Forgot Password?
-          </a>
-          <button
-            type="button"
-            onClick={switchToRegister}
-            className="text-sm text-red-500 hover:underline"
-          >
-            Create Account
-          </button>
-        </div> */}
+          <div className="text-center mt-4">
+          <p className="text-xs text-gray-500">
+            Demo Login: Use any phone number and password
+          </p>
+        </div>
       </form>
     </div>
   );

@@ -1,109 +1,123 @@
-// src/components/Variation.jsx
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaPlus, FaEdit } from "react-icons/fa";
-import { RxCross2 } from "react-icons/rx";
+import { FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import { LuSplit } from "react-icons/lu";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-// import { useNavigate } from "react-router-dom";
+import { fetchVariations, deleteVariation, updateVariation } from "../services/api";
 
 const Variation = () => {
-  const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [variations, setVariations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const [message, setMessage] = useState(""); // <-- Add this line
-  const [error, setError] = useState(""); // <-- If not already present
 
-  // useEffect(() => {
-  //   const fetchItems = async () => {
-  //     try {
-  //       const res = await fetch(
-  //         "https://hotelbuddhaavenue.vercel.app/api/user/items"
-  //       );
-  //       const data = await res.json();
-  //       setItems(data.itemsdata || []);
-  //     } catch {
-  //       setError("Failed to fetch items");
-  //     }
-  //   };
-
-  //   fetchItems();
-
-  //   // Refetch when the page regains focus (user returns from editing)
-  //   const handleFocus = () => fetchItems();
-  //   window.addEventListener("focus", handleFocus);
-
-  //   return () => {
-  //     window.removeEventListener("focus", handleFocus);
-  //   };
-  // }, []);
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const res = await fetch(
-          "https://hotelbuddhaavenue.vercel.app/api/user/items"
-        );
-        const data = await res.json();
-        setItems(data.itemsdata || []);
-      } catch {
-        setError("Failed to fetch items");
-      }
-    };
-    fetchItems();
+    loadVariations();
   }, []);
 
-  const handleDeleteVariation = async (itemId, variationId) => {
-    if (!window.confirm("Are you sure you want to delete this variation?"))
-      return;
-
+  const loadVariations = async () => {
     try {
-      const res = await fetch(
-        "https://hotelbuddhaavenue.vercel.app/api/admin/deletevariation",
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ variationId, itemId }),
-        }
-      );
-      const data = await res.json();
-
-      if (res.ok) {
-        setItems((prev) =>
-          prev.map((item) =>
-            item._id === itemId
-              ? {
-                  ...item,
-                  variation: item.variation.filter(
-                    (v) => v._id !== variationId
-                  ),
-                }
-              : item
-          )
-        );
-        setMessage("Variation deleted successfully!");
-      } else {
-        setError(data.message || "Failed to delete variation");
+      const result = await fetchVariations();
+      if (result.success) {
+        setVariations(result.variations);
       }
-    } catch {
-      setError("Network error");
+    } catch (error) {
+      console.error('Error loading variations:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredItems = items
-    .filter(
-      (item) => Array.isArray(item.variation) && item.variation.length > 0
-    )
-    .filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  // ...existing code...
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this variation?")) {
+      try {
+        const result = await deleteVariation(id);
+        if (result.success) {
+          setVariations(variations.filter(variation => variation._id !== id));
+        }
+      } catch (error) {
+        console.error('Error deleting variation:', error);
+      }
+    }
+  };
+
+  const toggleStatus = async (variation) => {
+    const newStatus = variation.status === "Active" ? "Inactive" : "Active";
+    try {
+      const result = await updateVariation(variation._id, { ...variation, status: newStatus });
+      if (result.success) {
+        setVariations(variations.map(v => 
+          v._id === variation._id ? { ...v, status: newStatus } : v
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating variation status:', error);
+    }
+  };
+
+  const filteredVariations = variations.filter((variation) =>
+    variation.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    variation.item?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    total: variations.length,
+    active: variations.filter(v => v.status === "Active").length,
+    inactive: variations.filter(v => v.status === "Inactive").length
+  };
 
   return (
-    <div className="p-2 sm:p-6 bg-red-50">
+    <div className="p-2 sm:p-6 bg-red-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-4 sm:mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Total Variations</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
+                  {stats.total}
+                </h3>
+              </div>
+              <div className="p-2 sm:p-3 bg-blue-100 rounded-full">
+                <LuSplit className="text-lg sm:text-xl text-blue-500" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Active Variations</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-green-600">
+                  {stats.active}
+                </h3>
+              </div>
+              <div className="p-2 sm:p-3 bg-green-100 rounded-full">
+                <FaCheckCircle className="text-lg sm:text-xl text-green-500" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Inactive Variations</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-red-600">
+                  {stats.inactive}
+                </h3>
+              </div>
+              <div className="p-2 sm:p-3 bg-red-100 rounded-full">
+                <FaTimesCircle className="text-lg sm:text-xl text-red-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Add Section */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <div className="flex-1 relative">
           <input
             type="text"
-            id="variationSearch"
-            name="variationSearch"
             placeholder="Search variations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -111,7 +125,6 @@ const Variation = () => {
           />
           <FaSearch className="absolute left-3 top-3.5 text-gray-700" />
         </div>
-
         <button
           onClick={() => navigate("/dashboard/add-variation")}
           className="flex justify-center items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-lg hover:from-red-600 hover:to-red-700 transition-all shadow-md"
@@ -121,144 +134,86 @@ const Variation = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredItems.map((item) => (
-          <div
-            key={item._id}
-            className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
-          >
-            <div className="flex items-center p-4 border-b border-gray-200">
-              <div className="flex-1 flex items-center justify-between">
-                <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
-                <button
-                  className="ml-2 p-2 text-blue-600 rounded-md hover:text-blue-900"
-                  onClick={() =>
-                    navigate("/dashboard/add-variation", {
-                      state: {
-                        variation: {
-                          id: item._id,
-                          itemId: item._id,
-                          itemName: item.name,
-                          options: item.variation, // pass the variations array
-                        },
-                      },
-                    })
-                  }
-                  title="Edit Variations"
-                >
-                  <FaEdit />
-                </button>
-
-                {/* <button
-                  className=" px-3 py-1 text-xs font-semibold  "
-                  onClick={() => handleDeleteItem(item._id)}
-                  title="Delete Item"
-                >
-                  <FaTrash color="red" />
-                </button> */}
-                {/* <p className="text-sm text-gray-500">
-                  Applied to: {variation.itemName}
-                </p> */}
-              </div>
-              {/* <span
-                className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                  variation.status === "Publish"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {variation.status}
-              </span> */}
-            </div>
-
-            <div className="p-4">
-              <div className="mb-3">
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Options:
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {item.variation && item.variation.length > 0 ? (
-                    item.variation.map((v) => (
-                      <div
-                        key={v._id}
-                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs flex items-center mb-2"
-                        style={{
-                          minWidth: 180,
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span>
-                          {v.name} - ₹{v.price} (Stock: {v.stock})
-                        </span>
-                        <button
-                          className="ml-2"
-                          onClick={() => handleDeleteVariation(item._id, v._id)}
-                          title="Delete Variation"
-                        >
-                          <RxCross2 />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-gray-400">No variations</span>
-                  )}
-                </div>
-              </div>
-
-              {/* <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200">
-                <span className=" text-gray-500">ID: {item.id}</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() =>
-                      navigate("/dashboard/add-variation", {
-                        state: {
-                          variation: {
-                            id: item.id,
-                            name: item.name,
-                            // itemName: variation.itemName,
-                            // options: variation.options,
-                            // status: variation.status,
-                            // iconType: variation.iconType || "size", // Pass the icon type as a string instead of a React element
-                          },
-                        },
-                      })
-                    }
-                    className="p-2 text-blue-600 rounded-md   hover:text-blue-900 "
-                  >
-                    <FaEdit />
-                  </button>
-                  <div>
-                    {message && <div style={{ color: "green" }}>{message}</div>}
-                    {error && <div style={{ color: "red" }}>{error}</div>}
-                    <ul>
-                      {item.variation.map((variation) => (
-                        <li
-                          key={variation._id}
-                          style={{ display: "flex", alignItems: "center" }}
-                        >
-                          <span style={{ flex: 1 }}>{variation.name}</span>
-                          <button onClick={() => handleDelete(variation._id)}>
-                            <FaTrash color="red" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  {message && (
-                    <div className="bg-green-100 text-green-700 p-3 rounded mb-4">
-                      {message}
-                    </div>
-                  )}
-                  {error && (
-                    <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
-                      {error}
-                    </div>
-                  )}
-                </div>
-              </div> */}
-            </div>
+      {/* Variations Cards */}
+      <div className="space-y-4">
+        <h3 className="font-semibold text-gray-700 text-lg">Available Variations ({filteredVariations.length})</h3>
+        
+        {loading ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-500">Loading variations...</p>
           </div>
-        ))}
+        ) : (
+          filteredVariations.map((variation) => (
+            <div key={variation._id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <div className="font-medium text-gray-900 text-lg">{variation.name}</div>
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      {variation.item}
+                    </span>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      variation.status === "Active" 
+                        ? "bg-green-100 text-green-800" 
+                        : "bg-red-100 text-red-800"
+                    }`}>
+                      {variation.status}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">Additional Price:</span> {variation.price === 0 ? "Free" : `+₹${variation.price}`}
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => toggleStatus(variation)}
+                    className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
+                      variation.status === "Active"
+                        ? "bg-red-50 text-red-600 hover:bg-red-100"
+                        : "bg-green-50 text-green-600 hover:bg-green-100"
+                    }`}
+                  >
+                    {variation.status === "Active" ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    onClick={() => navigate("/dashboard/add-variation", { state: { variation } })}
+                    className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-md text-sm transition-colors"
+                  >
+                    <FaEdit className="mr-1" /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(variation._id)}
+                    className="flex items-center bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-md text-sm transition-colors"
+                  >
+                    <FaTrash className="mr-1" /> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+        
+        {!loading && filteredVariations.length === 0 && (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <LuSplit className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No variations found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding your first variation.'}
+            </p>
+            {!searchTerm && (
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate('/dashboard/add-variation')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                >
+                  <FaPlus className="-ml-1 mr-2 h-4 w-4" />
+                  Add Variation
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

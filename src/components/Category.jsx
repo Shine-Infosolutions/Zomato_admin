@@ -1,27 +1,45 @@
 // src/components/Category.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { BiSolidCategory } from "react-icons/bi";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { fetchCategories, deleteCategory } from '../services/api';
 
 const Category = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Sample data - replace with your actual data
-  const categories = [
-    { id: 1, name: "Burger", items: 120, status: "Publish" },
-    { id: 2, name: "Pizza", items: 85, status: "Publish" },
-    { id: 3, name: "Cake", items: 45, status: "Unpublish" },
-  ];
+  useEffect(() => {
+    const loadCategories = async () => {
+      setLoading(true);
+      const result = await fetchCategories();
+      if (result.success) {
+        console.log('Categories received:', result.categories);
+        setCategories(result.categories);
+      } else {
+        console.error('Failed to fetch categories:', result.error);
+      }
+      setLoading(false);
+    };
+    loadCategories();
+  }, []);
   // const handleDelete = (id) => {
   //   // Here you would delete the category from your data store
   //   console.log("Deleting category with id:", id);
 
-  const handleDelete = (id) => {
-    console.log("Deleting category with id:", id);
-    alert(`Category with ID ${id} has been deleted`);
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this category?')) {
+      const result = await deleteCategory(id);
+      if (result.success) {
+        setCategories(categories.filter(cat => cat._id !== id));
+        alert('Category deleted successfully');
+      } else {
+        alert('Error deleting category');
+      }
+    }
   };
 
   return (
@@ -36,7 +54,7 @@ const Category = () => {
                   Total Categories
                 </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
-                  24
+                  {categories.length}
                 </h3>
               </div>
               <div className="p-2 sm:p-3 bg-red-100 rounded-full">
@@ -51,7 +69,7 @@ const Category = () => {
                   Publish Categories
                 </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-green-600">
-                  18
+                  {categories.length}
                 </h3>
               </div>
               <div className="p-2 sm:p-3 bg-green-100 rounded-full">
@@ -66,7 +84,7 @@ const Category = () => {
                   Unpublish Categories
                 </p>
                 <h3 className="text-xl sm:text-2xl font-bold text-red-600">
-                  6
+                  0
                 </h3>
               </div>
               <div className="p-2 sm:p-3 bg-red-100 rounded-full">
@@ -100,97 +118,53 @@ const Category = () => {
           <span>Add Category</span>
         </button>
       </div>
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        {/* <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              id="categorySearch"
-              name="categorySearch"
-              placeholder="Search categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 shadow rounded-lg focus:outline-none focus:border-red-500"
-            />
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
+      {/* Categories Cards */}
+      <div className="space-y-4">
+        <h3 className="font-semibold text-gray-700 text-lg">Available Categories</h3>
+        
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading categories...</p>
           </div>
-
-          <button
-            onClick={() => navigate("/dashboard/add-new")}
-            className="flex justify-center shadow items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
-          >
-            <FaPlus />
-            <span>Add Category</span>
-          </button>
-        </div> */}
-
-        {/* Table Section */}
-        <div className="overflow-x-auto">
-          <div className="px-4 py-3 bg-gray-50">
-            <h3 className="font-semibold text-gray-700">
-              Available Categories
-            </h3>
-          </div>
-          <table className="min-w-full">
-            <thead className="bg-gray-50 text-black-500">
-              <tr>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  S.no
-                </th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  Menu Name
-                </th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  Menu Status
-                </th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {categories.map((category) => (
-                <tr key={category.id}>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    {category.items}
-                  </td>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    {category.name}
-                  </td>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 sm:px-4 py-1 sm:py-2 inline-flex text-xs leading-5 font-semibold rounded-md ${
-                        category.status === "Publish"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {category.status}
+        ) : (
+          categories.map((cat) => (
+            <div key={cat._id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <div className="font-medium text-gray-900 text-lg">{cat.category || 'Unnamed Category'}</div>
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      Published
                     </span>
-                  </td>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-left text-sm font-medium">
-                    <button
-                      onClick={() =>
-                        navigate("/dashboard/add-new", {
-                          state: { category },
-                        })
-                      }
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(category.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">ID:</span> {cat.id || 'Auto-generated'}
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() =>
+                      navigate("/dashboard/add-category", {
+                        state: { category: cat },
+                      })
+                    }
+                    className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-md text-sm transition-colors"
+                  >
+                    <FaEdit className="mr-1" /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(cat._id)}
+                    className="flex items-center bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-md text-sm transition-colors"
+                  >
+                    <FaTrash className="mr-1" /> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

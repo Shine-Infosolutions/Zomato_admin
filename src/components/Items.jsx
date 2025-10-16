@@ -1,110 +1,151 @@
-// src/components/Items.jsx
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
-import { FaSitemap, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { FaSearch, FaPlus, FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import { BiSolidFoodMenu } from "react-icons/bi";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const Items = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState([]);
-  const [categories, setCategories] = useState({});
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Fetch categories from API
-  useEffect(() => {
-    setCategories({
-      1: "Category 1",
-      2: "Category 2",
-      3: "Category 3",
-      4: "Category 4",
-      5: "Category 5",
-      6: "Category 6",
-      7: "Category 7",
-      8: "Category 8",
-      9: "Category 9",
-      10: "Category 10",
-    });
+  // Mock data - replace with API call
+  const mockItems = [
+    {
+      _id: "1",
+      name: "Chicken Burger",
+      category: { name: "Burger" },
+      price: 199,
+      description: "Delicious chicken burger with fresh vegetables",
+      image: "https://via.placeholder.com/150",
+      veg: false,
+      rating: 4.5,
+      quantity: "1 piece",
+      variation: [],
+      addon: []
+    },
+    {
+      _id: "2",
+      name: "Margherita Pizza",
+      category: { name: "Pizza" },
+      price: 299,
+      description: "Classic margherita pizza with fresh basil",
+      image: "https://via.placeholder.com/150",
+      veg: true,
+      rating: 4.3,
+      quantity: "1 pizza",
+      variation: [],
+      addon: []
+    },
+    {
+      _id: "3",
+      name: "Chocolate Cake",
+      category: { name: "Dessert" },
+      price: 149,
+      description: "Rich chocolate cake with cream frosting",
+      image: "https://via.placeholder.com/150",
+      veg: true,
+      rating: 4.7,
+      quantity: "1 slice",
+      variation: [],
+      addon: []
+    }
+  ];
 
-    fetch("https://hotelbuddhaavenue.vercel.app/api/user/category")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.categories)) {
-          const categoryMap = {};
-          data.categories.forEach((category) => {
-            categoryMap[category.id] = category.name;
-          });
-          setCategories(categoryMap);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch categories:", err);
-        // Fallback already set
-      });
+  useEffect(() => {
+    // Simulate API call
+    setTimeout(() => {
+      setItems(mockItems);
+      setLoading(false);
+    }, 1000);
   }, []);
 
-  // Fetch items from API
-  useEffect(() => {
-    fetch("https://hotelbuddhaavenue.vercel.app/api/user/items")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.itemsdata)) {
-          setItems(data.itemsdata);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch items:", err);
-      });
-  }, []);
-
-  const handleDelete = async (_id) => {
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
-
-    try {
-      const response = await fetch(
-        "https://hotelbuddhaavenue.vercel.app/api/admin/deleteitem",
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ itemId: _id }), // or { _id: id } if backend expects _id
-        }
-      );
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        setItems((prev) => prev.filter((item) => item._id !== _id));
-        alert(result.message || "Item deleted successfully!");
-      } else {
-        alert(result.message || "Failed to delete item.");
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      try {
+        // API call would go here
+        setItems(items.filter(item => item._id !== id));
+        alert("Item deleted successfully!");
+      } catch (error) {
+        alert("Error deleting item");
       }
-    } catch (error) {
-      alert("Error deleting item: " + error.message);
     }
   };
 
-  // Get category name from categoryId
-  const getCategoryName = (categoryId) => {
-    return categories[categoryId] || categoryId || "-";
+  const filteredItems = items.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    total: items.length,
+    available: items.filter(item => item.rating > 0).length,
+    outOfStock: items.filter(item => item.rating === 0).length
   };
 
-  const filteredItems = items.filter(
-    (item) =>
-      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      getCategoryName(item.categoryId)
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase())
-  );
+  if (loading) {
+    return (
+      <div className="p-6 bg-red-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading items...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-2 sm:p-6 bg-red-50">
+    <div className="p-2 sm:p-6 bg-red-50 min-h-screen">
+      {/* Stats Cards */}
+      <div className="mb-4 sm:mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Total Items</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
+                  {stats.total}
+                </h3>
+              </div>
+              <div className="p-2 sm:p-3 bg-blue-100 rounded-full">
+                <BiSolidFoodMenu className="text-lg sm:text-xl text-blue-500" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Available Items</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-green-600">
+                  {stats.available}
+                </h3>
+              </div>
+              <div className="p-2 sm:p-3 bg-green-100 rounded-full">
+                <FaCheckCircle className="text-lg sm:text-xl text-green-500" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm text-gray-500">Out of Stock</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-red-600">
+                  {stats.outOfStock}
+                </h3>
+              </div>
+              <div className="p-2 sm:p-3 bg-red-100 rounded-full">
+                <FaTimesCircle className="text-lg sm:text-xl text-red-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Search and Add Section */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
         <div className="flex-1 relative">
           <input
             type="text"
-            id="itemsSearch"
-            name="itemsSearch"
             placeholder="Search items..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -112,79 +153,99 @@ const Items = () => {
           />
           <FaSearch className="absolute left-3 top-3.5 text-gray-700" />
         </div>
-
         <button
           onClick={() => navigate("/dashboard/add-item")}
           className="flex justify-center items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-lg hover:from-red-600 hover:to-red-700 transition-all shadow-md"
         >
           <FaPlus />
-          <span>Add Items</span>
+          <span>Add Item</span>
         </button>
       </div>
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        {/* Table Section */}
-        <div className="overflow-x-auto">
-          <div className="px-4 py-3 bg-gray-50">
-            <h3 className="font-semibold text-gray-700">Available Items</h3>
-          </div>
-          <table className="min-w-full">
-            <thead className="bg-gray-50 text-black-500">
-              <tr>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  ID
-                </th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  Name
-                </th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  Category
-                </th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  Price
-                </th>
-                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium uppercase">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredItems.map((item, index) => (
-                <tr key={item._id || index}>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    {index + 1}
-                  </td>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    {item.name}
-                  </td>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    {getCategoryName(
-                      item.categoryId || item.category || item.category_id
-                    )}
-                  </td>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                    ₹{item.price}
-                  </td>
-                  <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-left text-sm font-medium">
+
+      {/* Items Cards */}
+      <div className="space-y-4">
+        <h3 className="font-semibold text-gray-700 text-lg">Available Items ({filteredItems.length})</h3>
+        
+        {filteredItems.map((item) => (
+          <div key={item._id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <img
+                  className="h-16 w-16 rounded-lg object-cover"
+                  src={item.image}
+                  alt={item.name}
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/64?text=' + item.name.charAt(0);
+                  }}
+                />
+              </div>
+              
+              <div className="flex-1">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-medium text-gray-900 text-lg">{item.name}</h4>
+                    <p className="text-sm text-gray-500">{item.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-400">⭐</span>
+                    <span className="text-sm font-medium">{item.rating}</span>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                    {item.category?.name || 'No Category'}
+                  </span>
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                    item.veg ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {item.veg ? 'Veg' : 'Non-Veg'}
+                  </span>
+                  <span className="text-sm text-gray-600">{item.quantity}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="text-lg font-bold text-gray-900">₹{item.price}</div>
+                  <div className="flex gap-2">
                     <button
-                      onClick={() =>
-                        navigate("/dashboard/add-item", { state: { item } })
-                      }
-                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      onClick={() => navigate(`/dashboard/add-item`, { state: { item } })}
+                      className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-md text-sm transition-colors"
                     >
-                      <FaEdit />
+                      <FaEdit className="mr-1" /> Edit
                     </button>
                     <button
                       onClick={() => handleDelete(item._id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="flex items-center bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-md text-sm transition-colors"
                     >
-                      <FaTrash />
+                      <FaTrash className="mr-1" /> Delete
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {filteredItems.length === 0 && (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <BiSolidFoodMenu className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No items found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding your first item.'}
+            </p>
+            {!searchTerm && (
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate('/dashboard/add-item')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                >
+                  <FaPlus className="-ml-1 mr-2 h-4 w-4" />
+                  Add Item
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
