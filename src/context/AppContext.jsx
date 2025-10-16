@@ -18,27 +18,18 @@ export const AppProvider = ({ children }) => {
   // Login function
   const login = async (phone, password) => {
     try {
-      const response = await fetch(`${API_URL}api/admin/adminlogin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          role: "admin",
-          phone,
-          password,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok && data.message === "login successfull") {
-        setUser({ phone });
+      // Dummy login - accept any credentials
+      if (phone && password) {
+        setUser({ phone, email: "admin@restaurant.com" });
         setIsLoggedIn(true);
         setError("");
         return true;
       } else {
-        setError(data.message || "Login failed");
+        setError("Please enter phone and password");
         return false;
       }
     } catch (err) {
-      setError("Network error");
+      setError("Login failed");
       return false;
     }
   };

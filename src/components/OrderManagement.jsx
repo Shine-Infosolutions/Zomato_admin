@@ -1,331 +1,342 @@
-// src/components/OrderManagement.jsx
-import React, { useState } from "react";
-import {
-  FaShoppingBag,
-  FaClipboardList,
-  FaTruck,
-  FaCheck,
-  FaTimes,
-  FaSearch,
-  FaFilter,
-  FaCalendarAlt,
-  FaChartBar,
-  FaMoneyBillWave,
-} from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck } from "react-icons/fa";
+import { BiSolidFoodMenu } from "react-icons/bi";
+import { fetchAllOrders, updateOrderStatus as updateOrderStatusAPI, getUserAddresses } from '../services/api';
 
 const OrderManagement = () => {
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState("today");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [addressCache, setAddressCache] = useState({});
 
-  // Sample data for the dashboard
-  const stats = {
-    totalOrders: 156,
-    pendingOrders: 24,
-    processingOrders: 18,
-    deliveredOrders: 114,
-    totalRevenue: 25680,
-    averageOrderValue: 164.62,
-  };
+  useEffect(() => {
+    const loadOrders = async () => {
+      setLoading(true);
+      setError(null);
+      
+      const result = await fetchAllOrders();
+      
+      if (result.success) {
+        const ordersWithAddresses = await Promise.all(
+          result.orders.map(async (order) => {
+            if (order.customer_id && !addressCache[order.customer_id]) {
+              const addressResult = await getUserAddresses(order.customer_id);
+              if (addressResult.success && addressResult.data.length > 0) {
+                setAddressCache(prev => ({
+                  ...prev,
+                  [order.customer_id]: addressResult.data[0]
+                }));
+                return { ...order, addressDetails: addressResult.data[0] };
+              }
+            }
+            return { ...order, addressDetails: addressCache[order.customer_id] };
+          })
+        );
+        setOrders(ordersWithAddresses);
+        setFilteredOrders(ordersWithAddresses);
+      } else {
+        setError(result.error);
+      }
+      
+      setLoading(false);
+    };
 
-  // Sample data for orders
-  const orders = [
-    {
-      id: "ORD-001",
-      customer: "John Doe",
-      items: 3,
-      total: 450,
-      status: "pending",
-      date: "2023-06-15",
-    },
-    {
-      id: "ORD-002",
-      customer: "Jane Smith",
-      items: 2,
-      total: 280,
-      status: "processing",
-      date: "2023-06-15",
-    },
-    {
-      id: "ORD-003",
-      customer: "Robert Brown",
-      items: 5,
-      total: 720,
-      status: "delivered",
-      date: "2023-06-14",
-    },
-    {
-      id: "ORD-004",
-      customer: "Emily Wilson",
-      items: 1,
-      total: 150,
-      status: "delivered",
-      date: "2023-06-14",
-    },
-    {
-      id: "ORD-005",
-      customer: "Michael Clark",
-      items: 4,
-      total: 560,
-      status: "cancelled",
-      date: "2023-06-13",
-    },
-  ];
+    loadOrders();
+  }, []);
 
-  // Filter orders based on status and search term
-  const filteredOrders = orders.filter((order) => {
-    const matchesStatus =
-      filterStatus === "all" || order.status === filterStatus;
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  useEffect(() => {
+    let filtered = orders;
 
-  // Get status icon based on order status
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "pending":
-        return <FaClipboardList className="text-yellow-500" />;
-      case "processing":
-        return <FaTruck className="text-blue-500" />;
-      case "delivered":
-        return <FaCheck className="text-green-500" />;
-      case "cancelled":
-        return <FaTimes className="text-red-500" />;
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(order =>
+        order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (order.phone && order.phone.includes(searchTerm)) ||
+        (order.delivery_boy && order.delivery_boy.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Filter by status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(order => getStatusText(order.order_status) === statusFilter);
+    }
+
+    setFilteredOrders(filtered);
+  }, [searchTerm, statusFilter, orders]);
+
+  const getStatusText = (statusCode) => {
+    switch (statusCode) {
+      case 1:
+        return "Pending";
+      case 2:
+        return "Preparing";
+      case 3:
+        return "Out for Delivery";
+      case 4:
+        return "Delivered";
+      case 5:
+        return "Cancelled";
       default:
-        return <FaClipboardList className="text-gray-500" />;
+        return "Pending";
     }
   };
 
-  // Get status color based on order status
-  const getStatusColor = (status) => {
+  const getStatusColor = (statusCode) => {
+    const status = getStatusText(statusCode);
     switch (status) {
-      case "pending":
+      case "Pending":
         return "bg-yellow-100 text-yellow-800";
-      case "processing":
+      case "Preparing":
         return "bg-blue-100 text-blue-800";
-      case "delivered":
+      case "Out for Delivery":
+        return "bg-purple-100 text-purple-800";
+      case "Delivered":
         return "bg-green-100 text-green-800";
-      case "cancelled":
+      case "Cancelled":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
+  const getStatusIcon = (statusCode) => {
+    const status = getStatusText(statusCode);
+    switch (status) {
+      case "Pending":
+        return <FaClock className="text-yellow-600" />;
+      case "Preparing":
+        return <BiSolidFoodMenu className="text-blue-600" />;
+      case "Out for Delivery":
+        return <FaTruck className="text-purple-600" />;
+      case "Delivered":
+        return <FaCheck className="text-green-600" />;
+      case "Cancelled":
+        return <FaTimes className="text-red-600" />;
+      default:
+        return <FaClock className="text-gray-600" />;
+    }
+  };
+
+  const updateOrderStatus = async (orderId, newStatusCode) => {
+    try {
+      const result = await updateOrderStatusAPI(orderId, newStatusCode);
+      
+      if (result.success) {
+        setOrders(prevOrders =>
+          prevOrders.map(order =>
+            order._id === orderId ? { ...order, order_status: newStatusCode } : order
+          )
+        );
+        alert(`Order ${orderId} status updated to ${getStatusText(newStatusCode)}`);
+      } else {
+        alert("Error updating order status");
+      }
+    } catch (error) {
+      alert("Error updating order status");
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const stats = {
+    total: orders.length,
+    pending: orders.filter(o => o.order_status === 1).length,
+    preparing: orders.filter(o => o.order_status === 2).length,
+    outForDelivery: orders.filter(o => o.order_status === 3).length,
+    delivered: orders.filter(o => o.order_status === 4).length
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-red-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading orders...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-red-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-100 text-red-700 p-4 rounded-md">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-2 sm:p-6 bg-red-50">
+    <div className="p-2 sm:p-6 bg-red-50 min-h-screen max-w-full overflow-hidden">
+      {/* Stats Cards */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Order Management
-        </h1>
-        <p className="text-gray-600">Manage and track all your orders</p>
-      </div>
-
-      {/* Dashboard Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Orders</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                {stats.totalOrders}
-              </h3>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <FaShoppingBag className="text-xl text-blue-600" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+            <div className="text-center">
+              <p className="text-xs text-gray-500">Total Orders</p>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">{stats.total}</h3>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Pending Orders</p>
-              <h3 className="text-2xl font-bold text-yellow-600">
-                {stats.pendingOrders}
-              </h3>
-            </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <FaClipboardList className="text-xl text-yellow-600" />
+          <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+            <div className="text-center">
+              <p className="text-xs text-gray-500">Pending</p>
+              <h3 className="text-lg sm:text-xl font-bold text-yellow-600">{stats.pending}</h3>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Processing Orders</p>
-              <h3 className="text-2xl font-bold text-blue-600">
-                {stats.processingOrders}
-              </h3>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <FaTruck className="text-xl text-blue-600" />
+          <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+            <div className="text-center">
+              <p className="text-xs text-gray-500">Preparing</p>
+              <h3 className="text-lg sm:text-xl font-bold text-blue-600">{stats.preparing}</h3>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Delivered Orders</p>
-              <h3 className="text-2xl font-bold text-green-600">
-                {stats.deliveredOrders}
-              </h3>
-            </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <FaCheck className="text-xl text-green-600" />
+          <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+            <div className="text-center">
+              <p className="text-xs text-gray-500">Out for Delivery</p>
+              <h3 className="text-lg sm:text-xl font-bold text-purple-600">{stats.outForDelivery}</h3>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Revenue</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                ₹{stats.totalRevenue.toLocaleString()}
-              </h3>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-full">
-              <FaMoneyBillWave className="text-xl text-purple-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Average Order Value</p>
-              <h3 className="text-2xl font-bold text-gray-800">
-                ₹{stats.averageOrderValue}
-              </h3>
-            </div>
-            <div className="p-3 bg-indigo-100 rounded-full">
-              <FaChartBar className="text-xl text-indigo-600" />
+          <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+            <div className="text-center">
+              <p className="text-xs text-gray-500">Delivered</p>
+              <h3 className="text-lg sm:text-xl font-bold text-green-600">{stats.delivered}</h3>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Search orders..."
+              placeholder="Search by Order ID, Phone, or Delivery Boy..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
             />
             <FaSearch className="absolute left-3 top-3 text-gray-400" />
           </div>
-
-          <div className="flex gap-2">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="all">All Time</option>
-            </select>
-          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
+          >
+            <option value="all">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Preparing">Preparing</option>
+            <option value="Out for Delivery">Out for Delivery</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-700">Recent Orders</h3>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Items
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap font-medium">
-                    {order.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {order.customer}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.items}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    ₹{order.total}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                        order.status
-                      )}`}
-                    >
-                      {getStatusIcon(order.status)}
-                      <span className="ml-1 capitalize">{order.status}</span>
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">
-                      View
-                    </button>
-                    <button className="text-red-600 hover:text-red-900">
-                      Cancel
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Orders Cards */}
+      <div className="space-y-4">
+        <h3 className="font-semibold text-gray-700 text-lg">Orders ({filteredOrders.length})</h3>
+        
+        {filteredOrders.map((order) => (
+          <div key={order._id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow overflow-hidden">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-gray-900 text-lg truncate">Order #{order._id.slice(-8).toUpperCase()}</div>
+                <div className="text-sm text-gray-500">{formatDate(order.createdAt)}</div>
+              </div>
+              <div className="flex items-center">
+                {getStatusIcon(order.order_status)}
+                <span className={`ml-2 px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(order.order_status)}`}>
+                  {getStatusText(order.order_status)}
+                </span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="min-w-0">
+                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Order ID:</span> <span className="break-all">#{order._id.slice(-8).toUpperCase()}</span></div>
+                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Customer ID:</span> <span className="break-all">{order.customer_id || 'N/A'}</span></div>
+                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Phone:</span> <span className="break-all">{order.phone || 'N/A'}</span></div>
+                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Address:</span> 
+                  {order.address ? (
+                    <div className="ml-2 mt-1 break-words">
+                      {order.address.house_no && <div>{order.address.house_no}</div>}
+                      {order.address.street && <div>{order.address.street}</div>}
+                      {order.address.city && <div>{order.address.city}, {order.address.state} {order.address.pincode}</div>}
+                      {(order.addressDetails?.lat && order.addressDetails?.lng) && (
+                        <div className="text-xs mt-1">
+                          <a 
+                            href={`https://www.google.com/maps?q=${order.addressDetails.lat},${order.addressDetails.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                          >
+                            📍 View on Map ({order.addressDetails.lat.toFixed(4)}, {order.addressDetails.lng.toFixed(4)})
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ) : 'N/A'}
+                </div>
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Amount:</span> ₹{order.amount || 0}</div>
+                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Payment:</span> <span className="break-words">{order.payment_status || 'N/A'}</span></div>
+                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Items:</span>
+                  {order.items && order.items.length > 0 ? (
+                    <div className="ml-2 mt-1">
+                      {order.items.map((item, index) => (
+                        <div key={index} className="text-gray-600 break-words">
+                          • {item.name || item.item_name || 'Unknown'} x{item.quantity || 1}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 ml-1">No items found</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+              {order.order_status === 1 && (
+                <button onClick={() => updateOrderStatus(order._id, 2)} className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-md text-sm transition-colors">
+                  <FaCheck className="mr-1" /> Start Preparing
+                </button>
+              )}
+              {order.order_status === 2 && (
+                <button onClick={() => updateOrderStatus(order._id, 3)} className="flex items-center bg-purple-50 text-purple-600 hover:bg-purple-100 px-3 py-2 rounded-md text-sm transition-colors">
+                  <FaTruck className="mr-1" /> Send for Delivery
+                </button>
+              )}
+              {order.order_status === 3 && (
+                <button onClick={() => updateOrderStatus(order._id, 4)} className="flex items-center bg-green-50 text-green-600 hover:bg-green-100 px-3 py-2 rounded-md text-sm transition-colors">
+                  <FaCheck className="mr-1" /> Mark Delivered
+                </button>
+              )}
+              <button onClick={() => alert(`Viewing details for order ${order._id}`)} className="flex items-center bg-gray-50 text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm transition-colors">
+                <FaEye className="mr-1" /> View Details
+              </button>
+            </div>
+          </div>
+        ))}
 
         {filteredOrders.length === 0 && (
-          <div className="p-6 text-center text-gray-500">
-            No orders found matching your criteria
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <BiSolidFoodMenu className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm || statusFilter !== "all" 
+                ? 'Try adjusting your search or filter criteria.' 
+                : 'No orders have been placed yet.'}
+            </p>
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ import { FaSave, FaArrowLeft } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import { AiOutlineStock } from "react-icons/ai";
+import { addCategory, updateCategory } from '../services/api';
 
 const AddCategory = () => {
   const [categoryName, setCategoryName] = useState("");
@@ -18,35 +19,47 @@ const AddCategory = () => {
   // Check if we're editing an existing category
   useEffect(() => {
     if (location.state && location.state.category) {
-      const { id, name, items, status } = location.state.category;
-      setCategoryName(name);
-      setCategoryItem(items);
-      setCategoryStatus(status);
+      const { _id, category } = location.state.category;
+      setCategoryName(category || '');
+      setCategoryItem('');
+      setCategoryStatus('Publish');
       setIsEditing(true);
-      setEditId(id);
+      setEditId(_id);
     }
   }, [location]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your logic to save the category
+    
     const categoryData = {
-      id: isEditing ? editId : Date.now(), // Use existing ID when editing
-      name: categoryName,
-      items: categoryItem,
-      status: categoryStatus,
+      category: categoryName,
     };
 
-    if (isEditing) {
-      console.log("Category updated:", categoryData);
-      // Here you would update the category in your data store
-    } else {
-      console.log("Category added:", categoryData);
-      // Here you would add the new category to your data store
+    try {
+      let result;
+      if (isEditing) {
+        result = await updateCategory(editId, categoryData);
+        if (result.success) {
+          alert('Category updated successfully!');
+        } else {
+          alert('Error updating category');
+          return;
+        }
+      } else {
+        result = await addCategory(categoryData);
+        if (result.success) {
+          alert('Category added successfully!');
+        } else {
+          alert('Error adding category');
+          return;
+        }
+      }
+      
+      navigate("/dashboard/category");
+    } catch (error) {
+      console.error('Error saving category:', error);
+      alert('Error saving category');
     }
-
-    // Navigate back to categories list
-    navigate("/dashboard/category");
   };
 
   return (
