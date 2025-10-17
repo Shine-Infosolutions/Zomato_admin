@@ -26,13 +26,7 @@ export const fetchAllOrders = async () => {
 
 export const fetchAllOrdersAdmin = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders/getall`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({}),
-    });
+    const response = await fetch(`${API_BASE_URL}/api/order/getall`);
 
     const data = await response.json();
     
