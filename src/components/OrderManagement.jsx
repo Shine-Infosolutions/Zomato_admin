@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck } from "react-icons/fa";
 import { BiSolidFoodMenu } from "react-icons/bi";
-import { fetchAllOrders, updateOrderStatus as updateOrderStatusAPI, getUserAddresses } from '../services/api';
+import { fetchAllOrdersAdmin, updateOrderStatus as updateOrderStatusAPI, formatDate, getStatusColor } from '../services/api';
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -10,40 +10,25 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [addressCache, setAddressCache] = useState({});
+
+
+  const loadOrders = async () => {
+    setLoading(true);
+    setError(null);
+    
+    const result = await fetchAllOrdersAdmin();
+    
+    if (result.success) {
+      setOrders(result.orders);
+      setFilteredOrders(result.orders);
+    } else {
+      setError(result.error);
+    }
+    
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const loadOrders = async () => {
-      setLoading(true);
-      setError(null);
-      
-      const result = await fetchAllOrders();
-      
-      if (result.success) {
-        const ordersWithAddresses = await Promise.all(
-          result.orders.map(async (order) => {
-            if (order.customer_id && !addressCache[order.customer_id]) {
-              const addressResult = await getUserAddresses(order.customer_id);
-              if (addressResult.success && addressResult.data.length > 0) {
-                setAddressCache(prev => ({
-                  ...prev,
-                  [order.customer_id]: addressResult.data[0]
-                }));
-                return { ...order, addressDetails: addressResult.data[0] };
-              }
-            }
-            return { ...order, addressDetails: addressCache[order.customer_id] };
-          })
-        );
-        setOrders(ordersWithAddresses);
-        setFilteredOrders(ordersWithAddresses);
-      } else {
-        setError(result.error);
-      }
-      
-      setLoading(false);
-    };
-
     loadOrders();
   }, []);
 
@@ -244,101 +229,9 @@ const OrderManagement = () => {
       <div className="space-y-4">
         <h3 className="font-semibold text-gray-700 text-lg">Orders ({filteredOrders.length})</h3>
         
-        {filteredOrders.map((order) => (
-          <div key={order._id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow overflow-hidden">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 text-lg truncate">Order #{order._id.slice(-8).toUpperCase()}</div>
-                <div className="text-sm text-gray-500">{formatDate(order.createdAt)}</div>
-              </div>
-              <div className="flex items-center">
-                {getStatusIcon(order.order_status)}
-                <span className={`ml-2 px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(order.order_status)}`}>
-                  {getStatusText(order.order_status)}
-                </span>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div className="min-w-0">
-                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Order ID:</span> <span className="break-all">#{order._id.slice(-8).toUpperCase()}</span></div>
-                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Customer ID:</span> <span className="break-all">{order.customer_id || 'N/A'}</span></div>
-                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Phone:</span> <span className="break-all">{order.phone || 'N/A'}</span></div>
-                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Address:</span> 
-                  {order.address ? (
-                    <div className="ml-2 mt-1 break-words">
-                      {order.address.house_no && <div>{order.address.house_no}</div>}
-                      {order.address.street && <div>{order.address.street}</div>}
-                      {order.address.city && <div>{order.address.city}, {order.address.state} {order.address.pincode}</div>}
-                      {(order.addressDetails?.lat && order.addressDetails?.lng) && (
-                        <div className="text-xs mt-1">
-                          <a 
-                            href={`https://www.google.com/maps?q=${order.addressDetails.lat},${order.addressDetails.lng}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                          >
-                            📍 View on Map ({order.addressDetails.lat.toFixed(4)}, {order.addressDetails.lng.toFixed(4)})
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  ) : 'N/A'}
-                </div>
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Amount:</span> ₹{order.amount || 0}</div>
-                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Payment:</span> <span className="break-words">{order.payment_status || 'N/A'}</span></div>
-                <div className="text-sm mb-2"><span className="font-medium text-gray-700">Items:</span>
-                  {order.items && order.items.length > 0 ? (
-                    <div className="ml-2 mt-1">
-                      {order.items.map((item, index) => (
-                        <div key={index} className="text-gray-600 break-words">
-                          • {item.name || item.item_name || 'Unknown'} x{item.quantity || 1}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-gray-500 ml-1">No items found</span>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
-              {order.order_status === 1 && (
-                <button onClick={() => updateOrderStatus(order._id, 2)} className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-md text-sm transition-colors">
-                  <FaCheck className="mr-1" /> Start Preparing
-                </button>
-              )}
-              {order.order_status === 2 && (
-                <button onClick={() => updateOrderStatus(order._id, 3)} className="flex items-center bg-purple-50 text-purple-600 hover:bg-purple-100 px-3 py-2 rounded-md text-sm transition-colors">
-                  <FaTruck className="mr-1" /> Send for Delivery
-                </button>
-              )}
-              {order.order_status === 3 && (
-                <button onClick={() => updateOrderStatus(order._id, 4)} className="flex items-center bg-green-50 text-green-600 hover:bg-green-100 px-3 py-2 rounded-md text-sm transition-colors">
-                  <FaCheck className="mr-1" /> Mark Delivered
-                </button>
-              )}
-              <button onClick={() => alert(`Viewing details for order ${order._id}`)} className="flex items-center bg-gray-50 text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm transition-colors">
-                <FaEye className="mr-1" /> View Details
-              </button>
-            </div>
-          </div>
-        ))}
 
-        {filteredOrders.length === 0 && (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <BiSolidFoodMenu className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || statusFilter !== "all" 
-                ? 'Try adjusting your search or filter criteria.' 
-                : 'No orders have been placed yet.'}
-            </p>
-          </div>
-        )}
+
+
       </div>
     </div>
   );
