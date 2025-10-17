@@ -2,7 +2,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const fetchAllOrders = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/order/get`, {
+    const response = await fetch(`${API_BASE_URL}/api/order/getall`, {
       //const response = await fetch(`http://localhost:5000/api/order/getall`, {
     method: 'POST',
       headers: {
@@ -14,6 +14,23 @@ export const fetchAllOrders = async () => {
     const data = await response.json();
     
     if (data.success) {
+      return { success: true, orders: data.orders || [] };
+    } else {
+      return { success: false, error: data.message || 'Failed to fetch orders' };
+    }
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return { success: false, error: 'Error connecting to server' };
+  }
+};
+
+export const fetchAllOrdersAdmin = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/order/getall`);
+
+    const data = await response.json();
+    
+    if (response.ok) {
       return { success: true, orders: data.orders || [] };
     } else {
       return { success: false, error: data.message || 'Failed to fetch orders' };
@@ -284,4 +301,26 @@ export const deleteItem = async (id) => {
   } catch (error) {
     return { success: false, error: error.message };
   }
+};
+
+export const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+export const getStatusColor = (status) => {
+  const colors = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    accepted: 'bg-blue-100 text-blue-800',
+    preparing: 'bg-orange-100 text-orange-800',
+    ready: 'bg-purple-100 text-purple-800',
+    delivered: 'bg-green-100 text-green-800',
+    cancelled: 'bg-red-100 text-red-800'
+  };
+  return colors[status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
 };
