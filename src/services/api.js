@@ -228,3 +228,60 @@ export const deleteVariation = async (id) => {
     return { success: false, error: error.message };
   }
 };
+
+export const fetchItems = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/item/get`);
+    const data = await response.json();
+    return { success: response.ok, items: data.items || [] };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const addItem = async (itemData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/item/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(itemData),
+    });
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateItem = async (id, itemData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/item/update/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(itemData),
+    });
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteItem = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/item/delete/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
