@@ -3,7 +3,8 @@ import { FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { LuSplit } from "react-icons/lu";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { fetchVariations, deleteVariation, updateVariation } from "../services/api";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Variation = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,9 +18,10 @@ const Variation = () => {
 
   const loadVariations = async () => {
     try {
-      const result = await fetchVariations();
-      if (result.success) {
-        setVariations(result.variations);
+      const response = await fetch(`${API_BASE_URL}/api/variation/get`);
+      const data = await response.json();
+      if (response.ok) {
+        setVariations(data.variations || []);
       }
     } catch (error) {
       console.error('Error loading variations:', error);
@@ -31,8 +33,13 @@ const Variation = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this variation?")) {
       try {
-        const result = await deleteVariation(id);
-        if (result.success) {
+        const response = await fetch(`${API_BASE_URL}/api/variation/delete/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
           setVariations(variations.filter(variation => variation._id !== id));
         }
       } catch (error) {
@@ -42,12 +49,18 @@ const Variation = () => {
   };
 
   const toggleStatus = async (variation) => {
-    const newStatus = variation.status === "Active" ? "Inactive" : "Active";
+    const newAvailable = !variation.available;
     try {
-      const result = await updateVariation(variation._id, { ...variation, status: newStatus });
-      if (result.success) {
+      const response = await fetch(`${API_BASE_URL}/api/variation/update/${variation._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...variation, available: newAvailable }),
+      });
+      if (response.ok) {
         setVariations(variations.map(v => 
-          v._id === variation._id ? { ...v, status: newStatus } : v
+          v._id === variation._id ? { ...v, available: newAvailable } : v
         ));
       }
     } catch (error) {
@@ -62,8 +75,8 @@ const Variation = () => {
 
   const stats = {
     total: variations.length,
-    active: variations.filter(v => v.status === "Active").length,
-    inactive: variations.filter(v => v.status === "Inactive").length
+    active: variations.filter(v => v.available === true).length,
+    inactive: variations.filter(v => v.available === false).length
   };
 
   return (
@@ -153,11 +166,11 @@ const Variation = () => {
                       {variation.item}
                     </span>
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      variation.status === "Active" 
+                      variation.available 
                         ? "bg-green-100 text-green-800" 
                         : "bg-red-100 text-red-800"
                     }`}>
-                      {variation.status}
+                      {variation.available ? "Active" : "Inactive"}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600">
@@ -169,12 +182,12 @@ const Variation = () => {
                   <button
                     onClick={() => toggleStatus(variation)}
                     className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
-                      variation.status === "Active"
+                      variation.available
                         ? "bg-red-50 text-red-600 hover:bg-red-100"
                         : "bg-green-50 text-green-600 hover:bg-green-100"
                     }`}
                   >
-                    {variation.status === "Active" ? "Deactivate" : "Activate"}
+                    {variation.available ? "Deactivate" : "Activate"}
                   </button>
                   <button
                     onClick={() => navigate("/dashboard/add-variation", { state: { variation } })}

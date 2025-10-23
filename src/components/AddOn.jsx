@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaSave, FaArrowLeft } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
-import { addAddon, updateAddon, fetchCategories } from "../services/api";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddOn = () => {
   const [formData, setFormData] = useState({
@@ -12,25 +13,26 @@ const AddOn = () => {
     status: "Active"
   });
   const [isEditing, setIsEditing] = useState(false);
-  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    loadCategories();
+    loadItems();
   }, []);
 
-  const loadCategories = async () => {
+  const loadItems = async () => {
     try {
-      const result = await fetchCategories();
-      console.log('Categories result:', result);
-      if (result.success) {
-        setCategories(result.categories);
+      const response = await fetch(`${API_BASE_URL}/api/item/get`);
+      const data = await response.json();
+      console.log('Items result:', data);
+      if (response.ok) {
+        setItems(data.itemsdata || []);
       } else {
-        console.error('Failed to load categories:', result.error);
+        console.error('Failed to load items:', data.message);
       }
     } catch (error) {
-      console.error('Error loading categories:', error);
+      console.error('Error loading items:', error);
     }
   };
 
@@ -70,14 +72,26 @@ const AddOn = () => {
         price: parseFloat(formData.price) || 0
       };
 
-      let result;
+      let response;
       if (isEditing) {
-        result = await updateAddon(editingId, addonData);
+        response = await fetch(`${API_BASE_URL}/api/addon/update/${editingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(addonData),
+        });
       } else {
-        result = await addAddon(addonData);
+        response = await fetch(`${API_BASE_URL}/api/addon/add`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(addonData),
+        });
       }
       
-      if (result.success) {
+      if (response.ok) {
         alert(isEditing ? "Add-on updated successfully!" : "Add-on created successfully!");
         navigate("/dashboard/add-on");
       } else {
@@ -135,7 +149,7 @@ const AddOn = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="category" className="block text-gray-700 font-medium mb-2">
-                Category *
+                Item *
               </label>
               <select
                 id="category"
@@ -145,17 +159,17 @@ const AddOn = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
                 required
               >
-                <option value="">Select Category</option>
-                {categories.length > 0 ? (
-                  categories.map(category => (
-                    <option key={category._id} value={category.category}>{category.category}</option>
+                <option value="">Select Item</option>
+                {items.length > 0 ? (
+                  items.map(item => (
+                    <option key={item._id} value={item.name}>{item.name}</option>
                   ))
                 ) : (
-                  <option disabled>Loading categories...</option>
+                  <option disabled>Loading items...</option>
                 )}
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                Select which category this add-on belongs to
+                Select which item this add-on belongs to
               </p>
             </div>
 

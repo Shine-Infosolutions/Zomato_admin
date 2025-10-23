@@ -4,69 +4,47 @@ import { BiSolidFoodMenu } from "react-icons/bi";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const Items = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Mock data - replace with API call
-  const mockItems = [
-    {
-      _id: "1",
-      name: "Chicken Burger",
-      category: { name: "Burger" },
-      price: 199,
-      description: "Delicious chicken burger with fresh vegetables",
-      image: "https://via.placeholder.com/150",
-      veg: false,
-      rating: 4.5,
-      quantity: "1 piece",
-      variation: [],
-      addon: []
-    },
-    {
-      _id: "2",
-      name: "Margherita Pizza",
-      category: { name: "Pizza" },
-      price: 299,
-      description: "Classic margherita pizza with fresh basil",
-      image: "https://via.placeholder.com/150",
-      veg: true,
-      rating: 4.3,
-      quantity: "1 pizza",
-      variation: [],
-      addon: []
-    },
-    {
-      _id: "3",
-      name: "Chocolate Cake",
-      category: { name: "Dessert" },
-      price: 149,
-      description: "Rich chocolate cake with cream frosting",
-      image: "https://via.placeholder.com/150",
-      veg: true,
-      rating: 4.7,
-      quantity: "1 slice",
-      variation: [],
-      addon: []
-    }
-  ];
-
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setItems(mockItems);
-      setLoading(false);
-    }, 1000);
+    loadItems();
   }, []);
+
+  const loadItems = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/item/get`);
+      const data = await response.json();
+      if (response.ok) {
+        setItems(data.itemsdata || []);
+      }
+    } catch (error) {
+      console.error('Error loading items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
-        // API call would go here
-        setItems(items.filter(item => item._id !== id));
-        alert("Item deleted successfully!");
+        const response = await fetch(`${API_BASE_URL}/api/item/delete/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
+          setItems(items.filter(item => item._id !== id));
+          alert("Item deleted successfully!");
+        } else {
+          alert("Error deleting item");
+        }
       } catch (error) {
         alert("Error deleting item");
       }

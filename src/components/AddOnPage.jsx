@@ -3,7 +3,8 @@ import { FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { MdLibraryAdd } from "react-icons/md";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { fetchAddons, deleteAddon, updateAddon } from "../services/api";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddOnPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,9 +18,10 @@ const AddOnPage = () => {
 
   const loadAddons = async () => {
     try {
-      const result = await fetchAddons();
-      if (result.success) {
-        setAddons(result.addons);
+      const response = await fetch(`${API_BASE_URL}/api/addon/get`);
+      const data = await response.json();
+      if (response.ok) {
+        setAddons(data.addons || []);
       }
     } catch (error) {
       console.error('Error loading addons:', error);
@@ -31,8 +33,13 @@ const AddOnPage = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this add-on?")) {
       try {
-        const result = await deleteAddon(id);
-        if (result.success) {
+        const response = await fetch(`${API_BASE_URL}/api/addon/delete/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
           setAddons(addons.filter(addon => addon._id !== id));
         }
       } catch (error) {
@@ -42,12 +49,18 @@ const AddOnPage = () => {
   };
 
   const toggleStatus = async (addon) => {
-    const newStatus = addon.status === "Active" ? "Inactive" : "Active";
+    const newAvailable = !addon.available;
     try {
-      const result = await updateAddon(addon._id, { ...addon, status: newStatus });
-      if (result.success) {
+      const response = await fetch(`${API_BASE_URL}/api/addon/update/${addon._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ available: newAvailable }),
+      });
+      if (response.ok) {
         setAddons(addons.map(a => 
-          a._id === addon._id ? { ...a, status: newStatus } : a
+          a._id === addon._id ? { ...a, available: newAvailable } : a
         ));
       }
     } catch (error) {
@@ -62,8 +75,8 @@ const AddOnPage = () => {
 
   const stats = {
     total: addons.length,
-    active: addons.filter(a => a.status === "Active").length,
-    inactive: addons.filter(a => a.status === "Inactive").length
+    active: addons.filter(a => a.available === true).length,
+    inactive: addons.filter(a => a.available === false).length
   };
 
   return (
@@ -153,11 +166,11 @@ const AddOnPage = () => {
                       {addon.category}
                     </span>
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      addon.status === "Active" 
+                      addon.available 
                         ? "bg-green-100 text-green-800" 
                         : "bg-red-100 text-red-800"
                     }`}>
-                      {addon.status}
+                      {addon.available ? "Active" : "Inactive"}
                     </span>
                   </div>
                   <div className="text-lg font-bold text-gray-900">₹{addon.price}</div>
@@ -167,12 +180,12 @@ const AddOnPage = () => {
                   <button
                     onClick={() => toggleStatus(addon)}
                     className={`flex items-center px-3 py-2 rounded-md text-sm transition-colors ${
-                      addon.status === "Active"
+                      addon.available
                         ? "bg-red-50 text-red-600 hover:bg-red-100"
                         : "bg-green-50 text-green-600 hover:bg-green-100"
                     }`}
                   >
-                    {addon.status === "Active" ? "Deactivate" : "Activate"}
+                    {addon.available ? "Deactivate" : "Activate"}
                   </button>
                   <button
                     onClick={() => navigate("/dashboard/add-addon", { state: { addon } })}

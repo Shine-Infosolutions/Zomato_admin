@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { FaSave, FaArrowLeft, FaUpload, FaLeaf, FaDrumstickBite } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const AddItem = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -12,22 +14,60 @@ const AddItem = () => {
     quantity: "",
     veg: true,
     rating: 4.0,
-    image: null
+    image: null,
+    variations: [],
+    addons: []
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [categories] = useState([
-    { _id: "1", name: "Burger" },
-    { _id: "2", name: "Pizza" },
-    { _id: "3", name: "Dessert" },
-    { _id: "4", name: "Beverages" },
-    { _id: "5", name: "Starter" }
-  ]);
+  const [categories, setCategories] = useState([]);
+  const [availableVariations, setAvailableVariations] = useState([]);
+  const [availableAddons, setAvailableAddons] = useState([]);
 
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/category/get`);
+        const data = await response.json();
+        if (response.ok) {
+          setCategories(data.categories || []);
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+
+    const loadVariations = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/variation/get`);
+        const data = await response.json();
+        if (response.ok) {
+          setAvailableVariations(data.variations || []);
+        }
+      } catch (error) {
+        console.error('Error loading variations:', error);
+      }
+    };
+
+    const loadAddons = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/addon/get`);
+        const data = await response.json();
+        if (response.ok) {
+          setAvailableAddons(data.addons || []);
+        }
+      } catch (error) {
+        console.error('Error loading addons:', error);
+      }
+    };
+
+    loadCategories();
+    loadVariations();
+    loadAddons();
+
     if (location.state && location.state.item) {
       const item = location.state.item;
       setFormData({
@@ -39,7 +79,9 @@ const AddItem = () => {
         quantity: item.quantity || "",
         veg: item.veg || true,
         rating: item.rating || 4.0,
-        image: null
+        image: null,
+        variations: item.variation || [],
+        addons: item.addon || []
       });
       setImagePreview(item.image);
       setIsEditing(true);
@@ -70,20 +112,46 @@ const AddItem = () => {
     e.preventDefault();
     
     try {
-      // Here you would make API call to save/update item
       const itemData = {
-        ...formData,
+        name: formData.name,
+        category: formData.category,
         price: parseFloat(formData.price),
-        rating: parseFloat(formData.rating)
+        description: formData.description,
+        longDescription: formData.longDescription,
+        quantity: formData.quantity,
+        veg: formData.veg,
+        rating: parseFloat(formData.rating),
+        variation: formData.variations,
+        addon: formData.addons
       };
 
       console.log(isEditing ? "Updating item:" : "Creating item:", itemData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let response;
+      if (isEditing) {
+        response = await fetch(`${API_BASE_URL}/api/item/update/${location.state.item._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(itemData),
+        });
+      } else {
+        response = await fetch(`${API_BASE_URL}/api/item/add`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(itemData),
+        });
+      }
       
-      alert(isEditing ? "Item updated successfully!" : "Item created successfully!");
-      navigate("/dashboard/items");
+      if (response.ok) {
+        alert(isEditing ? "Item updated successfully!" : "Item created successfully!");
+        navigate("/dashboard/items");
+      } else {
+        alert("Error saving item. Please try again.");
+      }
     } catch (error) {
       alert("Error saving item. Please try again.");
     }
@@ -180,7 +248,7 @@ const AddItem = () => {
               >
                 <option value="">Select Category</option>
                 {categories.map(cat => (
-                  <option key={cat._id} value={cat._id}>{cat.name}</option>
+                  <option key={cat._id} value={cat._id}>{cat.category}</option>
                 ))}
               </select>
             </div>
@@ -282,6 +350,70 @@ const AddItem = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
               placeholder="Brief description of the item"
             />
+          </div>
+
+          {/* Variations */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">
+              Variations
+            </label>
+            <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3">
+              {availableVariations.map(variation => (
+                <label key={variation._id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.variations.some(v => (typeof v === 'object' ? v._id : v) === variation._id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          variations: [...prev.variations, variation._id]
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          variations: prev.variations.filter(v => (typeof v === 'object' ? v._id : v) !== variation._id)
+                        }));
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">{variation.name} (+₹{variation.price})</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Add-ons */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">
+              Add-ons
+            </label>
+            <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3">
+              {availableAddons.map(addon => (
+                <label key={addon._id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.addons.some(a => (typeof a === 'object' ? a._id : a) === addon._id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData(prev => ({
+                          ...prev,
+                          addons: [...prev.addons, addon._id]
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          addons: prev.addons.filter(a => (typeof a === 'object' ? a._id : a) !== addon._id)
+                        }));
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">{addon.name} (+₹{addon.price})</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div>

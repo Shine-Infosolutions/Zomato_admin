@@ -4,7 +4,8 @@ import { FaSave, FaArrowLeft } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import { AiOutlineStock } from "react-icons/ai";
-import { addCategory, updateCategory } from '../services/api';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddCategory = () => {
   const [categoryName, setCategoryName] = useState("");
@@ -36,18 +37,30 @@ const AddCategory = () => {
     };
 
     try {
-      let result;
+      let response;
       if (isEditing) {
-        result = await updateCategory(editId, categoryData);
-        if (result.success) {
+        response = await fetch(`${API_BASE_URL}/api/category/update/${editId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(categoryData),
+        });
+        if (response.ok) {
           alert('Category updated successfully!');
         } else {
           alert('Error updating category');
           return;
         }
       } else {
-        result = await addCategory(categoryData);
-        if (result.success) {
+        response = await fetch(`${API_BASE_URL}/api/category/add`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(categoryData),
+        });
+        if (response.ok) {
           alert('Category added successfully!');
         } else {
           alert('Error adding category');
