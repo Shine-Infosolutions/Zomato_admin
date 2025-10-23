@@ -125,7 +125,7 @@ const AddItem = () => {
         addon: formData.addons
       };
 
-      console.log(isEditing ? "Updating item:" : "Creating item:", itemData);
+
       
       let response;
       if (isEditing) {
