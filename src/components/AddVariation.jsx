@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaSave, FaArrowLeft } from "react-icons/fa";
 import { useLocation, useNavigate } from "react-router-dom";
-import { addVariation, updateVariation } from "../services/api";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddVariation = () => {
   const [formData, setFormData] = useState({
@@ -13,25 +14,43 @@ const AddVariation = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [items] = useState([
-    { _id: "1", name: "Pizza" },
-    { _id: "2", name: "Burger" },
-    { _id: "3", name: "Sandwich" },
-    { _id: "4", name: "Coffee" },
-    { _id: "5", name: "Cake" }
-  ]);
+  const [items, setItems] = useState([]);
+  const [appliedItems, setAppliedItems] = useState([]);
 
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
+    const loadItems = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/item/get`);
+        const data = await response.json();
+        if (response.ok) {
+          const itemsData = data.itemsdata || [];
+          setItems(itemsData);
+          
+          // If editing, find items with this variation
+          if (location.state?.variation) {
+            const variation = location.state.variation;
+            const itemsWithVariation = itemsData.filter(item => 
+              item.variation && item.variation.some(v => v._id === variation._id)
+            );
+            setAppliedItems(itemsWithVariation);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading items:', error);
+      }
+    };
+    loadItems();
+
     if (location.state && location.state.variation) {
       const variation = location.state.variation;
       setFormData({
         name: variation.name || "",
         price: variation.price || "",
         item: variation.item || "",
-        status: variation.status || "Active"
+        status: variation.available ? "Active" : "Inactive"
       });
       setIsEditing(true);
       setEditingId(variation._id);
@@ -56,14 +75,38 @@ const AddVariation = () => {
         price: parseFloat(formData.price) || 0
       };
 
-      let result;
+      let response;
       if (isEditing) {
-        result = await updateVariation(editingId, variationData);
+        response = await fetch(`${API_BASE_URL}/api/variation/update/${editingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            ...variationData, 
+            itemId: variationData.item,
+            available: variationData.status === "Active"
+          }),
+        });
       } else {
-        result = await addVariation(variationData);
+        const payload = {
+          name: variationData.name,
+          price: Number(variationData.price),
+          stock: Number(variationData.stock || 0),
+          itemId: variationData.item,
+          available: variationData.status === "Active"
+        };
+        console.log('Sending variation data:', payload);
+        response = await fetch(`${API_BASE_URL}/api/variation/add`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
       }
       
-      if (result.success) {
+      if (response.ok) {
         alert(isEditing ? "Variation updated successfully!" : "Variation created successfully!");
         navigate("/dashboard/variation");
       } else {
@@ -120,7 +163,7 @@ const AddVariation = () => {
           {/* Item Selection */}
           <div>
             <label htmlFor="item" className="block text-gray-700 font-medium mb-2">
-              Item Category *
+              Item *
             </label>
             <select
               id="item"
@@ -130,13 +173,13 @@ const AddVariation = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-red-500"
               required
             >
-              <option value="">Select Item Category</option>
+              <option value="">Select Item</option>
               {items.map(item => (
-                <option key={item._id} value={item.name}>{item.name}</option>
+                <option key={item._id} value={item._id}>{item.name}</option>
               ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">
-              Select which item category this variation applies to
+              Select which item this variation applies to
             </p>
           </div>
 
@@ -181,12 +224,30 @@ const AddVariation = () => {
             </p>
           </div>
 
+          {/* Applied Items Display */}
+          {isEditing && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-700 mb-2">Currently Applied To:</h4>
+              <div className="flex flex-wrap gap-2">
+                {appliedItems.length > 0 ? (
+                  appliedItems.map(item => (
+                    <span key={item._id} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                      {item.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-500">No items found with this variation</span>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Example Preview */}
           {formData.name && formData.item && (
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium text-gray-700 mb-2">Preview:</h4>
               <div className="text-sm text-gray-600">
-                <p><strong>Item:</strong> {formData.item}</p>
+                <p><strong>Item:</strong> {items.find(i => i._id === formData.item)?.name || formData.item}</p>
                 <p><strong>Variation:</strong> {formData.name}</p>
                 <p><strong>Additional Cost:</strong> {formData.price ? `+₹${formData.price}` : "Free"}</p>
                 <p><strong>Status:</strong> {formData.status}</p>

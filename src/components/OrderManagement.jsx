@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck } from "react-icons/fa";
 import { BiSolidFoodMenu } from "react-icons/bi";
-import { fetchAllOrdersAdmin, updateOrderStatus as updateOrderStatusAPI } from '../services/api';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -16,13 +17,19 @@ const OrderManagement = () => {
     setLoading(true);
     setError(null);
     
-    const result = await fetchAllOrdersAdmin();
-    
-    if (result.success) {
-      setOrders(result.orders);
-      setFilteredOrders(result.orders);
-    } else {
-      setError(result.error);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/order/getall`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setOrders(data.orders || []);
+        setFilteredOrders(data.orders || []);
+      } else {
+        setError(data.message || 'Failed to fetch orders');
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      setError('Error connecting to server');
     }
     
     setLoading(false);
@@ -107,9 +114,15 @@ const OrderManagement = () => {
 
   const updateOrderStatus = async (orderId, newStatusCode) => {
     try {
-      const result = await updateOrderStatusAPI(orderId, newStatusCode);
-      
-      if (result.success) {
+      const response = await fetch(`${API_BASE_URL}/api/order/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId, status: newStatusCode }),
+      });
+
+      if (response.ok) {
         setOrders(prevOrders =>
           prevOrders.map(order =>
             order._id === orderId ? { ...order, order_status: newStatusCode } : order

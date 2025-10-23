@@ -4,7 +4,8 @@ import { FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { BiSolidCategory } from "react-icons/bi";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { fetchCategories, deleteCategory } from '../services/api';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Category = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,12 +16,17 @@ const Category = () => {
   useEffect(() => {
     const loadCategories = async () => {
       setLoading(true);
-      const result = await fetchCategories();
-      if (result.success) {
-        console.log('Categories received:', result.categories);
-        setCategories(result.categories);
-      } else {
-        console.error('Failed to fetch categories:', result.error);
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/category/get`);
+        const data = await response.json();
+        if (response.ok) {
+          console.log('Categories received:', data.categories);
+          setCategories(data.categories || []);
+        } else {
+          console.error('Failed to fetch categories:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
       }
       setLoading(false);
     };
@@ -32,11 +38,20 @@ const Category = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      const result = await deleteCategory(id);
-      if (result.success) {
-        setCategories(categories.filter(cat => cat._id !== id));
-        alert('Category deleted successfully');
-      } else {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/category/delete/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
+          setCategories(categories.filter(cat => cat._id !== id));
+          alert('Category deleted successfully');
+        } else {
+          alert('Error deleting category');
+        }
+      } catch (error) {
         alert('Error deleting category');
       }
     }
