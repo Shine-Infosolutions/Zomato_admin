@@ -83,9 +83,11 @@ const AddVariation = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
-            ...variationData, 
-            itemId: variationData.item,
-            available: variationData.status === "Active"
+            name: variationData.name,
+            price: Number(variationData.price),
+            stock: Number(variationData.stock || 0),
+            available: variationData.status === "Active",
+            itemId: variationData.item
           }),
         });
       } else {
