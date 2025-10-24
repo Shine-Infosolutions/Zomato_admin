@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck, FaRobot } from "react-icons/fa";
 import { BiSolidFoodMenu } from "react-icons/bi";
+import { io } from "socket.io-client";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -11,6 +12,8 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [newOrderNotification, setNewOrderNotification] = useState(null);
 
 
 
@@ -44,6 +47,40 @@ const OrderManagement = () => {
 
   useEffect(() => {
     loadOrders();
+    
+    // Initialize WebSocket connection
+    const socketConnection = io(API_BASE_URL);
+    setSocket(socketConnection);
+    
+    // Join admin room
+    socketConnection.emit('join-admin');
+    
+    // Listen for new orders
+    socketConnection.on('new-order', (newOrder) => {
+      console.log('New order received:', newOrder);
+      setOrders(prevOrders => [newOrder, ...prevOrders]);
+      setNewOrderNotification(newOrder);
+      
+      // Clear notification after 5 seconds
+      setTimeout(() => {
+        setNewOrderNotification(null);
+      }, 5000);
+    });
+    
+    // Listen for order status updates
+    socketConnection.on('order-status-updated', (updatedOrder) => {
+      console.log('Order status updated:', updatedOrder);
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === updatedOrder._id ? updatedOrder : order
+        )
+      );
+    });
+    
+    // Cleanup on unmount
+    return () => {
+      socketConnection.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -202,6 +239,19 @@ const OrderManagement = () => {
 
   return (
     <div className="p-2 sm:p-6 bg-red-50 min-h-screen max-w-full overflow-hidden">
+      {/* New Order Notification */}
+      {newOrderNotification && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 animate-bounce">
+          <div className="flex items-center">
+            <BiSolidFoodMenu className="mr-2" />
+            <div>
+              <div className="font-bold">New Order Received!</div>
+              <div className="text-sm">Order #{newOrderNotification._id?.slice(-8)}</div>
+              <div className="text-sm">₹{newOrderNotification.amount || 0}</div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Stats Cards */}
       <div className="mb-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
