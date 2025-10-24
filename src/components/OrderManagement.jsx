@@ -11,6 +11,7 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState('Disconnected');
 
 
 
@@ -44,6 +45,35 @@ const OrderManagement = () => {
 
   useEffect(() => {
     loadOrders();
+    
+    // Setup SSE connection for real-time updates
+    const eventSource = new EventSource(`${API_BASE_URL}/api/sse/orders`);
+    
+    eventSource.onopen = () => {
+      setConnectionStatus('Connected');
+    };
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'initial' || data.type === 'update') {
+          setOrders(data.orders);
+          setFilteredOrders(data.orders);
+        }
+      } catch (error) {
+        console.error('Error parsing SSE data:', error);
+      }
+    };
+    
+    eventSource.onerror = () => {
+      setConnectionStatus('Connection Error');
+    };
+    
+    // Cleanup on unmount
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
   useEffect(() => {
@@ -202,6 +232,20 @@ const OrderManagement = () => {
 
   return (
     <div className="p-2 sm:p-6 bg-red-50 min-h-screen max-w-full overflow-hidden">
+      {/* Header with connection status */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold text-gray-800">Order Management</h1>
+          <div className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${
+              connectionStatus === 'Connected' ? 'bg-green-500' : 
+              connectionStatus === 'Connection Error' ? 'bg-red-500' : 'bg-yellow-500'
+            }`}></div>
+            <span className="text-sm text-gray-600">{connectionStatus}</span>
+          </div>
+        </div>
+      </div>
+      
       {/* Stats Cards */}
       <div className="mb-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
