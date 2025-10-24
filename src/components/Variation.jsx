@@ -56,7 +56,12 @@ const Variation = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...variation, available: newAvailable }),
+        body: JSON.stringify({ 
+          name: variation.name,
+          price: variation.price,
+          stock: variation.stock || 0,
+          available: newAvailable 
+        }),
       });
       if (response.ok) {
         setVariations(variations.map(v => 

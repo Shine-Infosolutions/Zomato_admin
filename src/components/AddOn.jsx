@@ -16,28 +16,35 @@ const AddOn = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
-  useEffect(() => {
-    loadItems();
-  }, []);
-
-  const loadItems = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/item/get`);
-      const data = await response.json();
-      console.log('Items result:', data);
-      if (response.ok) {
-        setItems(data.itemsdata || []);
-      } else {
-        console.error('Failed to load items:', data.message);
-      }
-    } catch (error) {
-      console.error('Error loading items:', error);
-    }
-  };
+  const [appliedItems, setAppliedItems] = useState([]);
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadItems = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/item/get`);
+        const data = await response.json();
+        if (response.ok) {
+          const itemsData = data.itemsdata || [];
+          setItems(itemsData);
+          
+          // If editing, find items with this addon
+          if (location.state?.addon) {
+            const addon = location.state.addon;
+            const itemsWithAddon = itemsData.filter(item => 
+              item.addon && item.addon.some(a => a._id === addon._id)
+            );
+            setAppliedItems(itemsWithAddon);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading items:', error);
+      }
+    };
+    loadItems();
+  }, [location]);
 
   useEffect(() => {
     if (location.state && location.state.addon) {
@@ -45,7 +52,7 @@ const AddOn = () => {
       setFormData({
         name: addon.name || "",
         price: addon.price || "",
-        category: addon.category || "",
+        category: "", // Clear category when editing since add-on can be in multiple items
         description: addon.description || "",
         status: addon.status || "Active"
       });
@@ -74,12 +81,20 @@ const AddOn = () => {
 
       let response;
       if (isEditing) {
+        // Find the item ID based on the selected category (item name)
+        const selectedItem = items.find(item => item.name === formData.category);
+        const itemId = selectedItem ? selectedItem._id : null;
+        
         response = await fetch(`${API_BASE_URL}/api/addon/update/${editingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(addonData),
+          body: JSON.stringify({
+            ...addonData,
+            available: addonData.status === "Active",
+            itemId: itemId
+          }),
         });
       } else {
         response = await fetch(`${API_BASE_URL}/api/addon/add`, {
@@ -233,6 +248,24 @@ const AddOn = () => {
               Set add-on availability status
             </p>
           </div>
+
+          {/* Applied Items Display */}
+          {isEditing && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-700 mb-2">Currently Applied To:</h4>
+              <div className="flex flex-wrap gap-2">
+                {appliedItems.length > 0 ? (
+                  appliedItems.map(item => (
+                    <span key={item._id} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                      {item.name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-500">No items found with this add-on</span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Example Preview */}
           {formData.name && formData.category && formData.price && (
