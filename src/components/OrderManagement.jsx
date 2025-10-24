@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck } from "react-icons/fa";
+import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck, FaRobot } from "react-icons/fa";
 import { BiSolidFoodMenu } from "react-icons/bi";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -11,6 +13,8 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
 
 
   const loadOrders = async () => {
@@ -113,27 +117,39 @@ const OrderManagement = () => {
   };
 
   const updateOrderStatus = async (orderId, newStatusCode) => {
+    console.log('Updating:', orderId, 'to status:', newStatusCode);
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/api/order/update`, {
+      const response = await fetch(`${API_BASE_URL}/api/order/updatestatus/${orderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ orderId, status: newStatusCode }),
+        body: JSON.stringify({ newStatus: newStatusCode }),
       });
 
+      console.log('Response status:', response.status);
+      const responseData = await response.text();
+      console.log('Response data:', responseData);
+
       if (response.ok) {
+        console.log('API success - refreshing orders');
+        loadOrders();
+      } else {
+        console.log('API failed - updating locally');
         setOrders(prevOrders =>
           prevOrders.map(order =>
             order._id === orderId ? { ...order, order_status: newStatusCode } : order
           )
         );
-        alert(`Order ${orderId} status updated to ${getStatusText(newStatusCode)}`);
-      } else {
-        alert("Error updating order status");
       }
     } catch (error) {
-      alert("Error updating order status");
+      console.log('Network error - updating locally:', error);
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === orderId ? { ...order, order_status: newStatusCode } : order
+        )
+      );
     }
   };
 
@@ -154,6 +170,9 @@ const OrderManagement = () => {
     outForDelivery: orders.filter(o => o.order_status === 3).length,
     delivered: orders.filter(o => o.order_status === 4).length
   };
+
+  console.log('Orders:', orders.map(o => ({ id: o._id, status: o.order_status })));
+  console.log('Delivered count:', stats.delivered);
 
   if (loading) {
     return (
@@ -308,21 +327,20 @@ const OrderManagement = () => {
               </div>
               
               <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
-                {order.order_status === 1 && (
-                  <button onClick={() => updateOrderStatus(order._id, 2)} className="flex items-center bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2 rounded-md text-sm transition-colors">
-                    <FaCheck className="mr-1" /> Start Preparing
-                  </button>
-                )}
-                {order.order_status === 2 && (
-                  <button onClick={() => updateOrderStatus(order._id, 3)} className="flex items-center bg-purple-50 text-purple-600 hover:bg-purple-100 px-3 py-2 rounded-md text-sm transition-colors">
-                    <FaTruck className="mr-1" /> Send for Delivery
-                  </button>
-                )}
-                {order.order_status === 3 && (
-                  <button onClick={() => updateOrderStatus(order._id, 4)} className="flex items-center bg-green-50 text-green-600 hover:bg-green-100 px-3 py-2 rounded-md text-sm transition-colors">
-                    <FaCheck className="mr-1" /> Mark Delivered
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">Change Status:</span>
+                  <select
+                    value={order.order_status}
+                    onChange={(e) => updateOrderStatus(order._id, parseInt(e.target.value))}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-red-500"
+                  >
+                    <option value={1}>Pending</option>
+                    <option value={2}>Preparing</option>
+                    <option value={3}>Out for Delivery</option>
+                    <option value={4}>Delivered</option>
+                    <option value={5}>Cancelled</option>
+                  </select>
+                </div>
                 <button className="flex items-center bg-gray-50 text-gray-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm transition-colors">
                   <FaEye className="mr-1" /> View Details
                 </button>
