@@ -56,7 +56,14 @@ const AddOnPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ available: newAvailable }),
+        body: JSON.stringify({ 
+          name: addon.name,
+          price: addon.price,
+          description: addon.description,
+          category: addon.category,
+          veg: addon.veg,
+          available: newAvailable 
+        }),
       });
       if (response.ok) {
         setAddons(addons.map(a => 
