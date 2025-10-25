@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck, FaRobot, FaBell } from "react-icons/fa";
+import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck, FaRobot } from "react-icons/fa";
 import { BiSolidFoodMenu } from "react-icons/bi";
-import { useAppContext } from '../context/AppContext';
-
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -13,7 +11,6 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isConnected = false, newOrders = [], orderUpdates = [], clearNewOrders = () => {}, clearOrderUpdates = () => {} } = useAppContext() || {};
 
 
 
@@ -48,36 +45,6 @@ const OrderManagement = () => {
   useEffect(() => {
     loadOrders();
   }, []);
-
-  // Handle new orders from WebSocket
-  useEffect(() => {
-    if (newOrders.length > 0) {
-      const latestOrder = newOrders[0];
-      setOrders(prevOrders => {
-        const exists = prevOrders.find(order => order._id === latestOrder.order._id);
-        if (!exists) {
-          return [latestOrder.order, ...prevOrders];
-        }
-        return prevOrders;
-      });
-      clearNewOrders();
-    }
-  }, [newOrders, clearNewOrders]);
-
-  // Handle order status updates from WebSocket
-  useEffect(() => {
-    if (orderUpdates.length > 0) {
-      const latestUpdate = orderUpdates[0];
-      setOrders(prevOrders => 
-        prevOrders.map(order => 
-          order._id === latestUpdate.orderId 
-            ? { ...order, order_status: latestUpdate.status }
-            : order
-        )
-      );
-      clearOrderUpdates();
-    }
-  }, [orderUpdates, clearOrderUpdates]);
 
   useEffect(() => {
     let filtered = orders;
@@ -235,16 +202,6 @@ const OrderManagement = () => {
 
   return (
     <div className="p-2 sm:p-6 bg-red-50 min-h-screen max-w-full overflow-hidden">
-      {/* Connection Status */}
-      <div className="mb-4">
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded text-sm ${
-          isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-          {isConnected ? 'Live Updates' : 'Offline'}
-        </div>
-      </div>
-
       {/* Stats Cards */}
       <div className="mb-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">

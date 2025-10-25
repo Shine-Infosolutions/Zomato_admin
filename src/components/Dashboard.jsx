@@ -18,7 +18,6 @@ import Category from "./Category";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import AddCategory from "./AddCategory";
 
-
 const Dashboard = () => {
   const { logout, user } = useAppContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -212,8 +211,6 @@ const Dashboard = () => {
           <Outlet />
         </div>
       </div>
-      
-
     </div>
   );
 };
