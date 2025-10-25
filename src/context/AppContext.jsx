@@ -64,7 +64,10 @@ export const AppProvider = ({ children }) => {
   // WebSocket setup
   useEffect(() => {
     const API_BASE_URL = "https://24-7-b.vercel.app";
-    const socketInstance = io(API_BASE_URL);
+    const socketInstance = io(API_BASE_URL, {
+      transports: ['polling'],
+      upgrade: false
+    });
 
     socketInstance.on('connect', () => {
       setIsConnected(true);

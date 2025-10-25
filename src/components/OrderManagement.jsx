@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaEye, FaCheck, FaTimes, FaClock, FaTruck, FaRobot, FaBell } from "react-icons/fa";
 import { BiSolidFoodMenu } from "react-icons/bi";
+import { useAppContext } from '../context/AppContext';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -12,7 +13,7 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { isConnected, newOrders, orderUpdates, clearNewOrders, clearOrderUpdates } = useAppContext();
+  const { isConnected = false, newOrders = [], orderUpdates = [], clearNewOrders = () => {}, clearOrderUpdates = () => {} } = useAppContext() || {};
 
 
 
