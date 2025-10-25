@@ -1,5 +1,6 @@
 // src/context/AppContext.jsx
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
+import { io } from 'socket.io-client';
 
 // Create the context
 const AppContext = createContext();
@@ -14,6 +15,10 @@ export const AppProvider = ({ children }) => {
   const [users, setUsers] = useState([
     { email: "admin@example.com", password: "admin123" },
   ]);
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [newOrders, setNewOrders] = useState([]);
+  const [orderUpdates, setOrderUpdates] = useState([]);
 
   // Login function
   const login = async (phone, password) => {
@@ -56,6 +61,36 @@ export const AppProvider = ({ children }) => {
     setIsLoggedIn(false);
   };
 
+  // WebSocket setup
+  useEffect(() => {
+    const API_BASE_URL = "https://24-7-b.vercel.app";
+    const socketInstance = io(API_BASE_URL);
+
+    socketInstance.on('connect', () => {
+      setIsConnected(true);
+      socketInstance.emit('join-admin');
+    });
+
+    socketInstance.on('disconnect', () => {
+      setIsConnected(false);
+    });
+
+    socketInstance.on('new-order', (data) => {
+      setNewOrders(prev => [data, ...prev]);
+    });
+
+    socketInstance.on('order-status-update', (data) => {
+      setOrderUpdates(prev => [data, ...prev]);
+    });
+
+    setSocket(socketInstance);
+
+    return () => socketInstance.disconnect();
+  }, []);
+
+  const clearNewOrders = () => setNewOrders([]);
+  const clearOrderUpdates = () => setOrderUpdates([]);
+
   // Values to be provided to consumers
   const contextValue = {
     isLoggedIn,
@@ -66,6 +101,12 @@ export const AppProvider = ({ children }) => {
     logout,
     register,
     setError,
+    socket,
+    isConnected,
+    newOrders,
+    orderUpdates,
+    clearNewOrders,
+    clearOrderUpdates,
   };
 
   return (
